@@ -1,4 +1,6 @@
 import streamlit as st
+import requests
+from io import BytesIO
 import pandas as pd
 
 # Fonction pour charger et nettoyer les données LPP et impôts
