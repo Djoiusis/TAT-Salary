@@ -18,8 +18,44 @@ def load_data():
     xls = pd.ExcelFile(BytesIO(response.content))
     
     lpp_data = pd.read_excel(xls, sheet_name="LPP")
-    # Recharger les impôts avec la bonne ligne d'en-tête (ligne 2 du fichier, index 1)
+    # Recharger les impôts avec la bonne ligne d'en-tête
     impots_data = pd.read_excel(xls, sheet_name="Impôts", header=1)
+
+    # Fusionner la deuxième et la troisième ligne pour recréer les noms corrects
+    impots_data.columns = impots_data.iloc[0].fillna('') + " " + impots_data.iloc[1].fillna('')
+    impots_data = impots_data[2:].reset_index(drop=True)  # Supprimer les lignes en double après fusion
+
+    # Nettoyer les noms de colonnes
+    impots_data.columns = impots_data.columns.str.replace(r'\.0$', '', regex=True).str.strip()
+
+    # Dictionnaire de correspondance entre les situations et les noms des colonnes
+    correspondance_situation = {
+        "Célibataire sans enfant": "Célibataire 0",
+        "Marié et le conjoint ne travaille pas et 0 enfant": "Marié et le conjoint ne travaille pas 0",
+        "Marié et le conjoint ne travaille pas et 1 enfant": "Marié et le conjoint ne travaille pas 1",
+        "Marié et le conjoint ne travaille pas et 2 enfants": "Marié et le conjoint ne travaille pas 2",
+        "Marié et le conjoint ne travaille pas et 3 enfants": "Marié et le conjoint ne travaille pas 3",
+        "Marié et le conjoint ne travaille pas et 4 enfants": "Marié et le conjoint ne travaille pas 4",
+        "Marié et le conjoint ne travaille pas et 5 enfants": "Marié et le conjoint ne travaille pas 5",
+        "Marié et les 2 conjoints travaillent et 0 enfant": "Marié et les 2 conjoints travaillent 0",
+        "Marié et les 2 conjoints travaillent et 1 enfant": "Marié et les 2 conjoints travaillent 1",
+        "Marié et les 2 conjoints travaillent et 2 enfants": "Marié et les 2 conjoints travaillent 2",
+        "Marié et les 2 conjoints travaillent et 3 enfants": "Marié et les 2 conjoints travaillent 3",
+        "Marié et les 2 conjoints travaillent et 4 enfants": "Marié et les 2 conjoints travaillent 4",
+        "Marié et les 2 conjoints travaillent et 5 enfants": "Marié et les 2 conjoints travaillent 5",
+        "Famille monoparentale et 1 enfant": "Famille monoparentale 1",
+        "Famille monoparentale et 2 enfants": "Famille monoparentale 2",
+        "Famille monoparentale et 3 enfants": "Famille monoparentale 3",
+        "Famille monoparentale et 4 enfants": "Famille monoparentale 4",
+        "Famille monoparentale et 5 enfants": "Famille monoparentale 5",
+    }
+
+    # Vérifier si la situation existe dans le dictionnaire
+    colonne_impot = correspondance_situation.get(situation_familiale)
+
+    if colonne_impot not in impots_data.columns:
+        raise ValueError(f"La colonne pour {situation_familiale} ({colonne_impot}) n'existe pas dans les impôts. Vérifiez : {impots_data.columns.tolist()}")
+
 
     # Fusionner les deux premières lignes pour recréer des noms de colonnes corrects
     impots_data.columns = impots_data.iloc[0].astype(str) + " " + impots_data.iloc[1].astype(str)
