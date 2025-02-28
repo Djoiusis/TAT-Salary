@@ -18,60 +18,22 @@ def load_data():
     xls = pd.ExcelFile(BytesIO(response.content))
     
     lpp_data = pd.read_excel(xls, sheet_name="LPP")
-    # Recharger les impôts avec la bonne ligne d'en-tête
     impots_data = pd.read_excel(xls, sheet_name="Impôts", header=1)
-
+    
+    # Nettoyage des données (simplifié)
+    lpp_data = lpp_data.dropna(how='all').reset_index(drop=True)
+    
     # Fusionner la deuxième et la troisième ligne pour recréer les noms corrects
     impots_data.columns = impots_data.iloc[0].fillna('') + " " + impots_data.iloc[1].fillna('')
-    impots_data = impots_data[2:].reset_index(drop=True)  # Supprimer les lignes en double après fusion
-
+    impots_data = impots_data[2:].reset_index(drop=True)
+    
     # Nettoyer les noms de colonnes
     impots_data.columns = impots_data.columns.str.replace(r'\.0$', '', regex=True).str.strip()
-
-    # Dictionnaire de correspondance entre les situations et les noms des colonnes
-    correspondance_situation = {
-        "Célibataire sans enfant": "Célibataire 0",
-        "Marié et le conjoint ne travaille pas et 0 enfant": "Marié et le conjoint ne travaille pas 0",
-        "Marié et le conjoint ne travaille pas et 1 enfant": "Marié et le conjoint ne travaille pas 1",
-        "Marié et le conjoint ne travaille pas et 2 enfants": "Marié et le conjoint ne travaille pas 2",
-        "Marié et le conjoint ne travaille pas et 3 enfants": "Marié et le conjoint ne travaille pas 3",
-        "Marié et le conjoint ne travaille pas et 4 enfants": "Marié et le conjoint ne travaille pas 4",
-        "Marié et le conjoint ne travaille pas et 5 enfants": "Marié et le conjoint ne travaille pas 5",
-        "Marié et les 2 conjoints travaillent et 0 enfant": "Marié et les 2 conjoints travaillent 0",
-        "Marié et les 2 conjoints travaillent et 1 enfant": "Marié et les 2 conjoints travaillent 1",
-        "Marié et les 2 conjoints travaillent et 2 enfants": "Marié et les 2 conjoints travaillent 2",
-        "Marié et les 2 conjoints travaillent et 3 enfants": "Marié et les 2 conjoints travaillent 3",
-        "Marié et les 2 conjoints travaillent et 4 enfants": "Marié et les 2 conjoints travaillent 4",
-        "Marié et les 2 conjoints travaillent et 5 enfants": "Marié et les 2 conjoints travaillent 5",
-        "Famille monoparentale et 1 enfant": "Famille monoparentale 1",
-        "Famille monoparentale et 2 enfants": "Famille monoparentale 2",
-        "Famille monoparentale et 3 enfants": "Famille monoparentale 3",
-        "Famille monoparentale et 4 enfants": "Famille monoparentale 4",
-        "Famille monoparentale et 5 enfants": "Famille monoparentale 5",
-    }
-
-    # Vérifier si la situation existe dans le dictionnaire
-    colonne_impot = correspondance_situation.get(situation_familiale)
-
-    if colonne_impot not in impots_data.columns:
-        raise ValueError(f"La colonne pour {situation_familiale} ({colonne_impot}) n'existe pas dans les impôts. Vérifiez : {impots_data.columns.tolist()}")
-
-
-    # Fusionner les deux premières lignes pour recréer des noms de colonnes corrects
-    impots_data.columns = impots_data.iloc[0].astype(str) + " " + impots_data.iloc[1].astype(str)
-    impots_data = impots_data[2:].reset_index(drop=True)  # Supprimer les lignes en double après fusion
-
-    # Afficher les nouveaux noms des colonnes
-    st.write("Noms des colonnes après correction :", impots_data.columns.tolist())
-
     
     return lpp_data, impots_data
 
 # Fonction pour calculer le salaire net
 def calculer_salaire_net(salaire_brut, age, situation_familiale, lpp_data, impots_data):
-    st.write("Noms des colonnes dans impôts :", impots_data.columns.tolist())
-    st.write("Situation familiale sélectionnée :", situation_familiale)
-
     correspondance_age_lpp = {
         "25-34 ans": "1",
         "35-44 ans": "2",
@@ -92,7 +54,31 @@ def calculer_salaire_net(salaire_brut, age, situation_familiale, lpp_data, impot
     taux_lpp = matching_rows.iloc[0, 3]
     cotisation_lpp = salaire_brut * taux_lpp
     
-    colonne_impot = impots_data.columns[impots_data.iloc[0] == situation_familiale].values[0]
+    correspondance_situation = {
+        "Célibataire sans enfant": "Célibataire 0",
+        "Marié et le conjoint ne travaille pas et 0 enfant": "Marié et le conjoint ne travaille pas 0",
+        "Marié et le conjoint ne travaille pas et 1 enfant": "Marié et le conjoint ne travaille pas 1",
+        "Marié et le conjoint ne travaille pas et 2 enfants": "Marié et le conjoint ne travaille pas 2",
+        "Marié et le conjoint ne travaille pas et 3 enfants": "Marié et le conjoint ne travaille pas 3",
+        "Marié et le conjoint ne travaille pas et 4 enfants": "Marié et le conjoint ne travaille pas 4",
+        "Marié et le conjoint ne travaille pas et 5 enfants": "Marié et le conjoint ne travaille pas 5",
+        "Marié et les 2 conjoints travaillent et 0 enfant": "Marié et les 2 conjoints travaillent 0",
+        "Marié et les 2 conjoints travaillent et 1 enfant": "Marié et les 2 conjoints travaillent 1",
+        "Marié et les 2 conjoints travaillent et 2 enfants": "Marié et les 2 conjoints travaillent 2",
+        "Marié et les 2 conjoints travaillent et 3 enfants": "Marié et les 2 conjoints travaillent 3",
+        "Marié et les 2 conjoints travaillent et 4 enfants": "Marié et les 2 conjoints travaillent 4",
+        "Marié et les 2 conjoints travaillent et 5 enfants": "Marié et les 2 conjoints travaillent 5",
+        "Famille monoparentale et 1 enfant": "Famille monoparentale 1",
+        "Famille monoparentale et 2 enfants": "Famille monoparentale 2",
+        "Famille monoparentale et 3 enfants": "Famille monoparentale 3",
+        "Famille monoparentale et 4 enfants": "Famille monoparentale 4",
+        "Famille monoparentale et 5 enfants": "Famille monoparentale 5",
+    }
+    
+    colonne_impot = correspondance_situation.get(situation_familiale)
+    if colonne_impot not in impots_data.columns:
+        raise ValueError(f"La colonne pour {situation_familiale} ({colonne_impot}) n'existe pas dans les impôts. Vérifiez : {impots_data.columns.tolist()}")
+    
     impots_row = impots_data[(impots_data.iloc[:, 1] <= salaire_brut) & (impots_data.iloc[:, 2] >= salaire_brut)]
     taux_impot = impots_row[colonne_impot].values[0] if not impots_row.empty else 0
     impot = salaire_brut * (taux_impot / 100)
@@ -105,7 +91,7 @@ st.title("Calculateur de Salaire Net")
 
 salaire_brut = st.number_input("Salaire brut mensuel (CHF)", min_value=0, step=100)
 age = st.selectbox("Âge", options=["25-34 ans", "35-44 ans", "45-54 ans", "55-65 ans"])
-situation_familiale = st.selectbox("Situation familiale", options=["Célibataire sans enfant", "Marié et le conjoint ne travaille pas et 0 enfant", "Marié et le conjoint ne travaille pas et 1 enfant", "Marié et le conjoint ne travaille pas et 2 enfants", "Marié et le conjoint ne travaille pas et 3 enfants", "Marié et le conjoint ne travaille pas et 4 enfants", "Marié et le conjoint ne travaille pas et 5 enfants", "Marié et les 2 conjoints travaillent et 0 enfant", "Marié et les 2 conjoints travaillent et 1 enfant", "Marié et les 2 conjoints travaillent et 2 enfants", "Marié et les 2 conjoints travaillent et 3 enfants", "Marié et les 2 conjoints travaillent et 4 enfants", "Marié et les 2 conjoints travaillent et 5 enfants", "Famille monoparentale et 1 enfant", "Famille monoparentale et 2 enfants", "Famille monoparentale et 3 enfants", "Famille monoparentale et 4 enfants", "Famille monoparentale et 5 enfants"])
+situation_familiale = st.selectbox("Situation familiale", options=list(correspondance_situation.keys()))
 
 if st.button("Calculer Salaire Net"):
     lpp_data, impots_data = load_data()
