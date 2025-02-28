@@ -18,11 +18,16 @@ def load_data():
     xls = pd.ExcelFile(BytesIO(response.content))
     
     lpp_data = pd.read_excel(xls, sheet_name="LPP")
-    impots_data = pd.read_excel(xls, sheet_name="Impôts")
-    
-    # Nettoyage des données (simplifié)
-    lpp_data = lpp_data.dropna(how='all').reset_index(drop=True)
-    impots_data = impots_data.dropna(how='all').reset_index(drop=True)
+    # Recharger les impôts avec la bonne ligne d'en-tête (ligne 2 du fichier, index 1)
+    impots_data = pd.read_excel(xls, sheet_name="Impôts", header=1)
+
+    # Fusionner les deux premières lignes pour recréer des noms de colonnes corrects
+    impots_data.columns = impots_data.iloc[0].astype(str) + " " + impots_data.iloc[1].astype(str)
+    impots_data = impots_data[2:].reset_index(drop=True)  # Supprimer les lignes en double après fusion
+
+    # Afficher les nouveaux noms des colonnes
+    st.write("Noms des colonnes après correction :", impots_data.columns.tolist())
+
     
     return lpp_data, impots_data
 
