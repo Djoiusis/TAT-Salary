@@ -29,6 +29,8 @@ def load_data():
 # Fonction pour calculer le salaire net
 def calculer_salaire_net(salaire_brut, age, situation_familiale, lpp_data, impots_data):
     # Appliquer les cotisations LPP
+    print("Valeurs disponibles pour l'âge dans LPP :", lpp_data.iloc[:, 2].unique())
+    print("Valeur sélectionnée :", age)
     matching_rows = lpp_data[lpp_data.iloc[:, 2].astype(str).str.strip() == str(age).strip()]
     if matching_rows.empty:
         raise ValueError(f"Aucune correspondance trouvée pour l'âge : {age}")
