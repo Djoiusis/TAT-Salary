@@ -5,7 +5,7 @@ import pandas as pd
 
 # Fonction pour charger et nettoyer les données LPP et impôts
 def load_data():
-    url = "https://github.com/Djoiusis/TAT-Salary/blob/main/Salaires_Tarifs_TAT.xlsx"
+    url = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/blob/main/Salaires_Tarifs_TAT.xlsx"
     
     # Télécharger le fichier depuis GitHub
     response = requests.get(url)
