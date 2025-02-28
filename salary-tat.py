@@ -29,7 +29,10 @@ def load_data():
 # Fonction pour calculer le salaire net
 def calculer_salaire_net(salaire_brut, age, situation_familiale, lpp_data, impots_data):
     # Appliquer les cotisations LPP
-    taux_lpp = lpp_data[lpp_data.iloc[:, 2] == age].iloc[:, 3].values[0]
+    matching_rows = lpp_data[lpp_data.iloc[:, 2].astype(str).str.strip() == str(age).strip()]
+    if matching_rows.empty:
+        raise ValueError(f"Aucune correspondance trouvée pour l'âge : {age}")
+    taux_lpp = matching_rows.iloc[0, 3]
     cotisation_lpp = salaire_brut * taux_lpp
     
     # Trouver la colonne des impôts correspondant à la situation familiale
