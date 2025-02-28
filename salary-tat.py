@@ -5,8 +5,14 @@ import pandas as pd
 def load_data():
     url = "https://github.com/Djoiusis/TAT-Salary/blob/main/Salaires_Tarifs_TAT.xlsx"
     
-    # Charger le fichier directement depuis GitHub
-    xls = pd.ExcelFile(url)
+    # Télécharger le fichier depuis GitHub
+    response = requests.get(url)
+    
+    if response.status_code != 200:
+        raise ValueError("Erreur lors du téléchargement du fichier Excel")
+
+    # Charger le fichier dans Pandas depuis la mémoire
+    xls = pd.ExcelFile(BytesIO(response.content))
     
     lpp_data = pd.read_excel(xls, sheet_name="LPP")
     impots_data = pd.read_excel(xls, sheet_name="Impôts")
