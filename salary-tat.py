@@ -28,29 +28,31 @@ def load_data():
 
 # Fonction pour calculer le salaire net
 def calculer_salaire_net(salaire_brut, age, situation_familiale, lpp_data, impots_data):
-    st.write("Valeurs disponibles pour l'âge dans LPP :", list(lpp_data.iloc[:, 2].unique()))
-    st.write("Valeur sélectionnée par l'utilisateur :", age)
+    correspondance_age_lpp = {
+        "25-34 ans": "1",
+        "35-44 ans": "2",
+        "45-54 ans": "3",
+        "55-65 ans": "4"
+    }
 
+    categorie_age = correspondance_age_lpp.get(age)
+    if categorie_age is None:
+        raise ValueError(f"L'âge sélectionné ({age}) n'existe pas dans la correspondance.")
 
     lpp_data.iloc[:, 2] = lpp_data.iloc[:, 2].astype(str).str.strip()
-    age = str(age).strip()  # Normaliser aussi l'entrée utilisateur
-
-    # Trouver la correspondance
-    matching_rows = lpp_data[lpp_data.iloc[:, 2] == age]
+    matching_rows = lpp_data[lpp_data.iloc[:, 2] == categorie_age]
 
     if matching_rows.empty:
-        raise ValueError(f"Aucune correspondance trouvée pour l'âge : {age}. Vérifiez les valeurs disponibles : {lpp_data.iloc[:, 2].unique()}")
+        raise ValueError(f"Aucune correspondance trouvée pour l'âge : {age} (Catégorie {categorie_age}).")
 
-    taux_lpp = matching_rows.iloc[0, 3]  # Sélectionner le taux correspondant
+    taux_lpp = matching_rows.iloc[0, 3]
     cotisation_lpp = salaire_brut * taux_lpp
     
-    # Trouver la colonne des impôts correspondant à la situation familiale
     colonne_impot = impots_data.columns[impots_data.iloc[0] == situation_familiale].values[0]
     impots_row = impots_data[(impots_data.iloc[:, 1] <= salaire_brut) & (impots_data.iloc[:, 2] >= salaire_brut)]
     taux_impot = impots_row[colonne_impot].values[0] if not impots_row.empty else 0
     impot = salaire_brut * (taux_impot / 100)
     
-    # Calcul du salaire net
     salaire_net = salaire_brut - cotisation_lpp - impot
     return salaire_net
 
