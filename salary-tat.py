@@ -28,6 +28,9 @@ def load_data():
 
 # Fonction pour calculer le salaire net
 def calculer_salaire_net(salaire_brut, age, situation_familiale, lpp_data, impots_data):
+    st.write("Noms des colonnes dans impôts :", impots_data.columns.tolist())
+    st.write("Situation familiale sélectionnée :", situation_familiale)
+
     correspondance_age_lpp = {
         "25-34 ans": "1",
         "35-44 ans": "2",
