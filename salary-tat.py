@@ -3,8 +3,10 @@ import pandas as pd
 
 # Fonction pour charger et nettoyer les données LPP et impôts
 def load_data():
-    file_path = "/mnt/data/Salaires_Tarifs_TAT.xlsx"
-    xls = pd.ExcelFile(file_path)
+    url = "https://github.com/Djoiusis/TAT-Salary/blob/main/Salaires_Tarifs_TAT.xlsx"
+    
+    # Charger le fichier directement depuis GitHub
+    xls = pd.ExcelFile(url)
     
     lpp_data = pd.read_excel(xls, sheet_name="LPP")
     impots_data = pd.read_excel(xls, sheet_name="Impôts")
