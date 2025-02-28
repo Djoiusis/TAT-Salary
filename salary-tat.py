@@ -28,6 +28,10 @@ def load_data():
 
 # Fonction pour calculer le salaire net
 def calculer_salaire_net(salaire_brut, age, situation_familiale, lpp_data, impots_data):
+    st.write("Valeurs disponibles pour l'âge dans LPP :", list(lpp_data.iloc[:, 2].unique()))
+    st.write("Valeur sélectionnée par l'utilisateur :", age)
+
+
     lpp_data.iloc[:, 2] = lpp_data.iloc[:, 2].astype(str).str.strip()
     age = str(age).strip()  # Normaliser aussi l'entrée utilisateur
 
