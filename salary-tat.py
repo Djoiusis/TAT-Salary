@@ -85,7 +85,7 @@ if fichier_excel:
 
     # Chargement des données
     lpp_df = donnees["LPP"]
-    is_df = donnees["ImpotSource"]
+    is_df = donnees["Impôts"]
 
     # Entrée utilisateur
     salaire_brut = st.number_input("Salaire Brut (CHF)", min_value=0, value=13333)
