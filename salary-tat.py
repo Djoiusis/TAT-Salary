@@ -1,91 +1,123 @@
 import streamlit as st
 import pandas as pd
 
-# Définition des taux fixes
-TAXES_FIXES = {
-    "AVS": 5.30 / 100,
-    "AC": 1.10 / 100,
-    "Assurance maternité": 0.032 / 100,
-    "AANP": 0.63 / 100,
-    "APG": 0.495 / 100
-}
+# Charger les données depuis un fichier Excel
+@st.cache_data
+def charger_donnees(fichier):
+    return pd.ExcelFile(fichier)
 
-# Définition des taux LPP en fonction de l'âge
-LPP_COTISATIONS = {
-    (25, 34): 4.20 / 100,
-    (35, 44): 5.70 / 100,
-    (45, 54): 8.70 / 100,
-    (55, 65): 10.20 / 100
-}
+# Déterminer le taux LPP en fonction de l'âge
+def obtenir_taux_lpp(age, lpp_df):
+    for _, row in lpp_df.iterrows():
+        age_min, age_max = map(int, row["Âge LPP"].split('-'))
+        if age_min <= age <= age_max:
+            return row["Total LPP"] / 100
+    return 0  # Aucun taux si l'âge ne correspond pas
 
-# Fonction pour récupérer le taux d'impôt depuis Excel
-def get_taux_impot(df):
-    """Récupère le taux d'impôt à la source depuis la base Excel"""
-    row = df[df.iloc[:, 0] == "Retenue impôt à la source"]
-    if not row.empty:
-        return float(row.iloc[0, 1])
-    return 0
-
-# Fonction de calcul du salaire net
-def calculer_salaire_net(salaire_brut, age, df_impots):
-    """Calcule les déductions sociales et le salaire net"""
+# Déterminer le taux IS selon le salaire brut et le statut marital
+def obtenir_taux_is(salaire_brut, statut_marital, is_df):
+    statut_ligne = is_df[is_df["Statut Marital"] == statut_marital]
     
-    # Calcul des déductions fixes
-    avs = salaire_brut * TAXES_FIXES["AVS"]
-    ac = salaire_brut * TAXES_FIXES["AC"]
-    maternite = salaire_brut * TAXES_FIXES["Assurance maternité"]
-    aanp = salaire_brut * TAXES_FIXES["AANP"]
-    apg = salaire_brut * TAXES_FIXES["APG"]
+    if statut_ligne.empty:
+        return 0  # Aucun taux trouvé
+    
+    statut_ligne = statut_ligne.sort_values(by="Salaire Min", ascending=True)
 
-    # Calcul de la cotisation LPP
-    cotisation_lpp = next((taux for (min_age, max_age), taux in LPP_COTISATIONS.items() if min_age <= age <= max_age), 0) * salaire_brut
+    for _, row in statut_ligne.iterrows():
+        if salaire_brut >= row["Salaire Min"] and salaire_brut <= row["Salaire Max"]:
+            return row["Taux IS"] / 100
 
-    # Calcul de l'impôt à la source (récupéré du fichier)
-    taux_impot_source = get_taux_impot(df_impots)
-    impot_source = salaire_brut * taux_impot_source
+    return 0  # Aucun taux trouvé
+
+# Fonction principale de calcul du salaire net
+def calculer_salaire_net(salaire_brut, age, statut_marital, lpp_df, is_df):
+    # Taux fixes des cotisations sociales
+    taux_avs = 5.3 / 100
+    taux_ac = 1.1 / 100
+    taux_aanp = 0.63 / 100
+    taux_maternite = 0.032 / 100
+    taux_apg = 0.495 / 100
+
+    # Calcul des cotisations sociales
+    cotisation_avs = salaire_brut * taux_avs
+    cotisation_ac = salaire_brut * taux_ac
+    cotisation_aanp = salaire_brut * taux_aanp
+    cotisation_maternite = salaire_brut * taux_maternite
+    cotisation_apg = salaire_brut * taux_apg
+
+    # Calcul de la cotisation LPP selon l'âge
+    taux_lpp = obtenir_taux_lpp(age, lpp_df)
+    cotisation_lpp = salaire_brut * taux_lpp
+
+    # Calcul du taux IS automatique
+    taux_is = obtenir_taux_is(salaire_brut, statut_marital, is_df)
+    impot_source = salaire_brut * taux_is
 
     # Total des déductions
-    total_deductions = avs + ac + maternite + aanp + apg + cotisation_lpp + impot_source
+    total_deductions = (
+        cotisation_avs + cotisation_ac + cotisation_aanp +
+        cotisation_maternite + cotisation_apg + cotisation_lpp + impot_source
+    )
 
-    # Salaire net
+    # Calcul du salaire net
     salaire_net = salaire_brut - total_deductions
 
-    return salaire_net, cotisation_lpp, avs, ac, maternite, aanp, apg, impot_source, total_deductions
+    return salaire_net, taux_is * 100, {
+        "Retenue AVS": cotisation_avs,
+        "Cotisations AC": cotisation_ac,
+        "Assurance maternité": cotisation_maternite,
+        "Cotisations AANP": cotisation_aanp,
+        "Caisse de pension LPP": cotisation_lpp,
+        "Cotisations APG mal": cotisation_apg,
+        "Retenue impôt à la source": impot_source,
+        "Total Déductions": total_deductions,
+        "Salaire Net": salaire_net
+    }
 
 # Interface Streamlit
-st.title("🧾 Calcul du Salaire Net")
+st.title("Calculateur de Salaire Net 💰")
 
-# Téléchargement du fichier Excel
-fichier_excel = st.file_uploader("📂 Téléchargez le fichier Excel des impôts", type=["xlsx"])
-
+# Upload du fichier Excel
+fichier_excel = st.file_uploader("Téléchargez le fichier Excel", type=["xlsx"])
 if fichier_excel:
-    df_impots = pd.read_excel(fichier_excel)
+    xls = charger_donnees(fichier_excel)
 
-    # Entrées utilisateur
-    salaire_brut = st.number_input("💰 Salaire Brut (CHF)", min_value=0, value=13333, step=500)
-    age = st.number_input("🎂 Âge", min_value=18, max_value=70, value=30)
+    # Chargement des données
+    lpp_df = pd.read_excel(xls, sheet_name="LPP")
+    is_df = pd.read_excel(xls, sheet_name="ImpotSource")
 
-    # Calcul des résultats
-    salaire_net, cotisation_lpp, avs, ac, maternite, aanp, apg, impot_source, total_deductions = calculer_salaire_net(salaire_brut, age, df_impots)
+    # Entrée utilisateur
+    salaire_brut = st.number_input("Salaire Brut (CHF)", min_value=0, value=13333)
+    age = st.number_input("Âge", min_value=18, max_value=65, value=35)
 
-    # Affichage des résultats
-    st.subheader("📊 Résultat")
-    st.write(f"💰 **Salaire brut :** {salaire_brut:.2f} CHF")
-    st.write(f"🏦 **Caisse de pension LPP :** -{cotisation_lpp:.2f} CHF")
-    st.write(f"📉 **Total déductions sociales :** -{total_deductions:.2f} CHF")
-    st.write(f"✅ **Salaire net :** {salaire_net:.2f} CHF")
+    # Liste déroulante pour choisir la situation familiale
+    situation_familiale = st.selectbox("Situation familiale", options=[
+        "Célibataire sans enfant",
+        "Marié et le conjoint ne travaille pas et 0 enfant",
+        "Marié et le conjoint ne travaille pas et 1 enfant",
+        "Marié et le conjoint ne travaille pas et 2 enfants",
+        "Marié et le conjoint ne travaille pas et 3 enfants",
+        "Marié et le conjoint ne travaille pas et 4 enfants",
+        "Marié et le conjoint ne travaille pas et 5 enfants",
+        "Marié et les 2 conjoints travaillent et 0 enfant",
+        "Marié et les 2 conjoints travaillent et 1 enfant",
+        "Marié et les 2 conjoints travaillent et 2 enfants",
+        "Marié et les 2 conjoints travaillent et 3 enfants",
+        "Marié et les 2 conjoints travaillent et 4 enfants",
+        "Marié et les 2 conjoints travaillent et 5 enfants",
+        "Famille monoparentale et 1 enfant",
+        "Famille monoparentale et 2 enfants",
+        "Famille monoparentale et 3 enfants",
+        "Famille monoparentale et 4 enfants",
+        "Famille monoparentale et 5 enfants"
+    ])
 
-    # Affichage sous forme de fiche de paie
-    st.subheader("📑 Fiche de paie")
-    st.write("| **Désignation**                 | **Montant (CHF)** |")
-    st.write("|--------------------------------|------------------|")
-    st.write(f"| 💰 Salaire Brut                 | {salaire_brut:.2f} |")
-    st.write(f"| 🏦 Caisse de pension LPP        | -{cotisation_lpp:.2f} |")
-    st.write(f"| 🏛 Retenue AVS                  | -{avs:.2f} |")
-    st.write(f"| 🏢 Cotisations AC               | -{ac:.2f} |")
-    st.write(f"| 🏥 Assurance maternité          | -{maternite:.2f} |")
-    st.write(f"| 🚑 Cotisations AANP             | -{aanp:.2f} |")
-    st.write(f"| 🏥 Cotisations APG              | -{apg:.2f} |")
-    st.write(f"| 🏛 Retenue impôt à la source    | -{impot_source:.2f} |")
-    st.write(f"| 📉 **Total déductions sociales** | -{total_deductions:.2f} |")
-    st.write(f"| ✅ **Salaire Net**              | **{salaire_net:.2f}** |")
+    if st.button("Calculer"):
+        salaire_net, taux_is, details = calculer_salaire_net(salaire_brut, age, situation_familiale, lpp_df, is_df)
+
+        # Affichage des résultats
+        st.write(f"### Salaire Net : {salaire_net:.2f} CHF")
+        st.write(f"### Taux IS Calculé : {taux_is:.2f} %")
+        st.write("### Détails des Déductions :")
+        for key, value in details.items():
+            st.write(f"- **{key}** : {value:.2f} CHF")
