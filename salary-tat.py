@@ -99,11 +99,11 @@ st.title("📊 Calculateur de Salaire Net")
 is_df = charger_is_data()
 
 # Entrées utilisateur
-salaire_brut_annuel = st.number_input("💰 Salaire Brut Annuel (CHF)", min_value=0, value=160000)
+salaire_brut_annuel = st.number_input("💰 Salaire Brut Annuel (CHF)", min_value=0, value=120000)
 age = st.number_input("🎂 Âge", min_value=25, max_value=65, value=35)
 
 # Supprimer les colonnes inutiles
-colonnes_a_exclure = ["Mois Max", "Unnamed: 5", "Unnamed: 6"]
+colonnes_a_exclure = ["Mois Max", "Unnamed: 5", "Unnamed: 6", "INDEX", "Année Min", "Année Max", "Mois Min"]
 colonnes_filtrees = [col for col in is_df.columns if col not in colonnes_a_exclure]
 
 # Sélection du statut marital basé sur les colonnes du fichier Excel
