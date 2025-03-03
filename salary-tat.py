@@ -121,3 +121,4 @@ if fichier_excel:
         st.write("### Détails des Déductions :")
         for key, value in details.items():
             st.write(f"- **{key}** : {value:.2f} CHF")
+            
