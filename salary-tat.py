@@ -1,11 +1,12 @@
 import streamlit as st
 import pandas as pd
 
+# URL du fichier IS.xlsx sur GitHub (Assurez-vous que c'est bien l'URL brute !)
 GITHUB_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/IS.xlsx"
 
-# Charger les données Excel (IS.xlsx)
+# Charger les données Excel depuis GitHub
 @st.cache_data
-def charger_is_data(fichier):
+def charger_is_data():
     return pd.read_excel(GITHUB_URL)
 
 # Table des cotisations LPP (conservée en dur)
@@ -53,12 +54,12 @@ LPP_TABLE = [
     (4, 65, 9.00, 1.20, 10.20),
 ]
 
-# Fonction pour obtenir le taux IS depuis le fichier Excel
+# Fonction pour obtenir le taux IS depuis Excel
 def obtenir_taux_is(salaire_brut_annuel, statut_marital, is_df):
     tranche = is_df[(is_df["Année Min"] <= salaire_brut_annuel) & (is_df["Année Max"] >= salaire_brut_annuel)]
-    if tranche.empty:
+    if tranche.empty or statut_marital not in is_df.columns:
         return 0
-    return tranche[statut_marital].values[0] / 100 if statut_marital in is_df.columns else 0
+    return tranche[statut_marital].values[0] / 100
 
 # Fonction pour obtenir le taux LPP
 def obtenir_taux_lpp(age):
@@ -67,64 +68,42 @@ def obtenir_taux_lpp(age):
             return row[4] / 100
     return 0
 
-# Fonction principale avec détails
+# Fonction principale de calcul du salaire net
 def calculer_salaire_net(salaire_brut_annuel, age, statut_marital, is_df):
     salaire_brut_mensuel = salaire_brut_annuel / 12
-
-    taux_avs = 5.3 / 100
-    taux_ac = 1.1 / 100
-    taux_aanp = 0.63 / 100
-    taux_maternite = 0.032 / 100
-    taux_apg = 0.495 / 100
-
-    cotisation_avs = salaire_brut_mensuel * taux_avs
-    cotisation_ac = salaire_brut_mensuel * taux_ac
-    cotisation_aanp = salaire_brut_mensuel * taux_aanp
-    cotisation_maternite = salaire_brut_mensuel * taux_maternite
-    cotisation_apg = salaire_brut_mensuel * taux_apg
-
-    taux_lpp = obtenir_taux_lpp(age)
-    cotisation_lpp = (salaire_brut_mensuel * taux_lpp)/2
-
-    taux_is = obtenir_taux_is(salaire_brut_annuel, statut_marital, is_df)
-    impot_source = salaire_brut_mensuel * taux_is
-
-    total_deductions = (
-        cotisation_avs + cotisation_ac + cotisation_aanp +
-        cotisation_maternite + cotisation_apg + cotisation_lpp + impot_source
-    )
-
-    salaire_net_mensuel = salaire_brut_mensuel - total_deductions
-
-    details = {
-        "Retenue AVS": cotisation_avs,
-        "Cotisations AC": cotisation_ac,
-        "Assurance maternité": cotisation_maternite,
-        "Cotisations AANP": cotisation_aanp,
-        "Caisse de pension LPP": cotisation_lpp,
-        "Cotisations APG mal": cotisation_apg,
-        "Retenue impôt à la source": impot_source,
-        "Total Déductions": total_deductions,
+    taux_fixes = {
+        "AVS": 5.3 / 100,
+        "AC": 1.1 / 100,
+        "AANP": 0.63 / 100,
+        "Maternité": 0.032 / 100,
+        "APG": 0.495 / 100,
     }
-
-    return salaire_net_mensuel, details
+    cotisations = {key: salaire_brut_mensuel * taux for key, taux in taux_fixes.items()}
+    cotisations["LPP"] = salaire_brut_mensuel * obtenir_taux_lpp(age)
+    cotisations["Impôt Source"] = salaire_brut_mensuel * obtenir_taux_is(salaire_brut_annuel, statut_marital, is_df)
+    total_deductions = sum(cotisations.values())
+    salaire_net_mensuel = salaire_brut_mensuel - total_deductions
+    return salaire_net_mensuel, cotisations
 
 # Interface Streamlit
-st.title("Calculateur de Salaire Net 💰")
+st.title("📊 Calculateur de Salaire Net")
 
-fichier_excel = st.file_uploader("📂 Téléchargez le fichier IS.xlsx", type=["xlsx"])
-if fichier_excel:
-    is_df = charger_is_data(fichier_excel)
+# Chargement des données IS.xlsx
+is_df = charger_is_data()
 
-    salaire_brut_annuel = st.number_input("💰 Salaire Brut Annuel (CHF)", min_value=0, value=160000)
-    age = st.number_input("🎂 Âge", min_value=25, max_value=65, value=35)
+# Entrées utilisateur
+salaire_brut_annuel = st.number_input("💰 Salaire Brut Annuel (CHF)", min_value=0, value=160000)
+age = st.number_input("🎂 Âge", min_value=25, max_value=65, value=35)
 
-    situation_familiale = st.selectbox("👨‍👩‍👧‍👦 Situation familiale", is_df.columns[4:])
+# Sélection du statut marital basé sur les colonnes du fichier Excel
+situation_familiale = st.selectbox("👨‍👩‍👧‍👦 Situation familiale", is_df.columns[4:])
 
-    if st.button("🧮 Calculer"):
-        salaire_net_mensuel, details = calculer_salaire_net(salaire_brut_annuel, age, situation_familiale, is_df)
-        st.write(f"### 💰 Salaire Net Mensuel : {salaire_net_mensuel:.2f} CHF")
-
-        st.write("### 📋 Détails des Déductions :")
-        for key, value in details.items():
-            st.write(f"- **{key}** : {value:.2f} CHF")
+# Bouton de calcul
+if st.button("🧮 Calculer"):
+    salaire_net_mensuel, details_deductions = calculer_salaire_net(salaire_brut_annuel, age, situation_familiale, is_df)
+    
+    # Résultats
+    st.write(f"### 💰 Salaire Net Mensuel : {salaire_net_mensuel:.2f} CHF")
+    st.write("### 📉 Détail des Déductions :")
+    for key, value in details_deductions.items():
+        st.write(f"- **{key}** : {value:.2f} CHF")
