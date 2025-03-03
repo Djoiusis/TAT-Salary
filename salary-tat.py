@@ -84,6 +84,10 @@ def calculer_salaire_net(salaire_brut, age, situation_familiale, lpp_data, impot
     impots_row = impots_data[(impots_data.iloc[:, 1] <= salaire_brut) & (impots_data.iloc[:, 2] >= salaire_brut)]
     taux_impot = impots_row[colonne_impot].values[0] if not impots_row.empty else 0
     impot = salaire_brut * (taux_impot / 100)
+
+    salaire_brut = float(salaire_brut)
+    cotisation_lpp = float(cotisation_lpp)
+    impot = float(impot)
     
     salaire_net = salaire_brut - cotisation_lpp - impot
     return salaire_net
