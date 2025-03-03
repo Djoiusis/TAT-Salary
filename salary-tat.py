@@ -124,4 +124,5 @@ if fichier_excel:
         st.write(f"### 💰 Salaire Net Mensuel : {salaire_net_mensuel:.2f} CHF")
 
         st.write("### 📋 Détails des Déductions :")
-        for key,
+        for key, value in details.items():
+            st.write(f"- **{key}** : {value:.2f} CHF")
