@@ -1,109 +1,91 @@
 import streamlit as st
-import requests
-import openpyxl
-from io import BytesIO
 import pandas as pd
 
-# Dictionnaire de correspondance global
-correspondance_situation = {
-    "Célibataire sans enfant": "Célibataire 0",
-    "Marié et le conjoint ne travaille pas et 0 enfant": "Marié et le conjoint ne travaille pas 0",
-    "Marié et le conjoint ne travaille pas et 1 enfant": "Marié et le conjoint ne travaille pas 1",
-    "Marié et le conjoint ne travaille pas et 2 enfants": "Marié et le conjoint ne travaille pas 2",
-    "Marié et le conjoint ne travaille pas et 3 enfants": "Marié et le conjoint ne travaille pas 3",
-    "Marié et le conjoint ne travaille pas et 4 enfants": "Marié et le conjoint ne travaille pas 4",
-    "Marié et le conjoint ne travaille pas et 5 enfants": "Marié et le conjoint ne travaille pas 5",
-    "Marié et les 2 conjoints travaillent et 0 enfant": "Marié et les 2 conjoints travaillent 0",
-    "Marié et les 2 conjoints travaillent et 1 enfant": "Marié et les 2 conjoints travaillent 1",
-    "Marié et les 2 conjoints travaillent et 2 enfants": "Marié et les 2 conjoints travaillent 2",
-    "Marié et les 2 conjoints travaillent et 3 enfants": "Marié et les 2 conjoints travaillent 3",
-    "Marié et les 2 conjoints travaillent et 4 enfants": "Marié et les 2 conjoints travaillent 4",
-    "Marié et les 2 conjoints travaillent et 5 enfants": "Marié et les 2 conjoints travaillent 5",
-    "Famille monoparentale et 1 enfant": "Famille monoparentale 1",
-    "Famille monoparentale et 2 enfants": "Famille monoparentale 2",
-    "Famille monoparentale et 3 enfants": "Famille monoparentale 3",
-    "Famille monoparentale et 4 enfants": "Famille monoparentale 4",
-    "Famille monoparentale et 5 enfants": "Famille monoparentale 5",
+# Définition des taux fixes
+TAXES_FIXES = {
+    "AVS": 5.30 / 100,
+    "AC": 1.10 / 100,
+    "Assurance maternité": 0.032 / 100,
+    "AANP": 0.63 / 100,
+    "APG": 0.495 / 100
 }
 
+# Définition des taux LPP en fonction de l'âge
+LPP_COTISATIONS = {
+    (25, 34): 4.20 / 100,
+    (35, 44): 5.70 / 100,
+    (45, 54): 8.70 / 100,
+    (55, 65): 10.20 / 100
+}
 
-# Fonction pour charger et nettoyer les données LPP et impôts
-def load_data():
-    url = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/Salaires_Tarifs_TAT.xlsx"
+# Fonction pour récupérer le taux d'impôt depuis Excel
+def get_taux_impot(df):
+    """Récupère le taux d'impôt à la source depuis la base Excel"""
+    row = df[df.iloc[:, 0] == "Retenue impôt à la source"]
+    if not row.empty:
+        return float(row.iloc[0, 1])
+    return 0
+
+# Fonction de calcul du salaire net
+def calculer_salaire_net(salaire_brut, age, df_impots):
+    """Calcule les déductions sociales et le salaire net"""
     
-    # Télécharger le fichier depuis GitHub
-    response = requests.get(url)
-    
-    if response.status_code != 200:
-        raise ValueError("Erreur lors du téléchargement du fichier Excel")
+    # Calcul des déductions fixes
+    avs = salaire_brut * TAXES_FIXES["AVS"]
+    ac = salaire_brut * TAXES_FIXES["AC"]
+    maternite = salaire_brut * TAXES_FIXES["Assurance maternité"]
+    aanp = salaire_brut * TAXES_FIXES["AANP"]
+    apg = salaire_brut * TAXES_FIXES["APG"]
 
-    # Charger le fichier dans Pandas depuis la mémoire
-    xls = pd.ExcelFile(BytesIO(response.content))
-    
-    lpp_data = pd.read_excel(xls, sheet_name="LPP")
-    impots_data = pd.read_excel(xls, sheet_name="Impôts", header=1)
-    
-    # Nettoyage des données (simplifié)
-    lpp_data = lpp_data.dropna(how='all').reset_index(drop=True)
-    
-    # Fusionner la deuxième et la troisième ligne pour recréer les noms corrects
-    impots_data.columns = impots_data.iloc[0].astype(str).fillna('') + " " + impots_data.iloc[1].astype(str).fillna('')
-    impots_data = impots_data[2:].reset_index(drop=True)
-    
-    # Nettoyer les noms de colonnes
-    impots_data.columns = impots_data.columns.str.replace(r'\.0$', '', regex=True).str.strip()
-    
-    return lpp_data, impots_data
+    # Calcul de la cotisation LPP
+    cotisation_lpp = next((taux for (min_age, max_age), taux in LPP_COTISATIONS.items() if min_age <= age <= max_age), 0) * salaire_brut
 
-# Fonction pour calculer le salaire net
-def calculer_salaire_net(salaire_brut, age, situation_familiale, lpp_data, impots_data):
-    correspondance_age_lpp = {
-        "25-34 ans": "1",
-        "35-44 ans": "2",
-        "45-54 ans": "3",
-        "55-65 ans": "4"
-    }
+    # Calcul de l'impôt à la source (récupéré du fichier)
+    taux_impot_source = get_taux_impot(df_impots)
+    impot_source = salaire_brut * taux_impot_source
 
-    categorie_age = correspondance_age_lpp.get(age)
-    if categorie_age is None:
-        raise ValueError(f"L'âge sélectionné ({age}) n'existe pas dans la correspondance.")
+    # Total des déductions
+    total_deductions = avs + ac + maternite + aanp + apg + cotisation_lpp + impot_source
 
-    lpp_data.iloc[:, 2] = lpp_data.iloc[:, 2].astype(str).str.strip()
-    matching_rows = lpp_data[lpp_data.iloc[:, 2] == categorie_age]
+    # Salaire net
+    salaire_net = salaire_brut - total_deductions
 
-    if matching_rows.empty:
-        raise ValueError(f"Aucune correspondance trouvée pour l'âge : {age} (Catégorie {categorie_age}).")
+    return salaire_net, cotisation_lpp, avs, ac, maternite, aanp, apg, impot_source, total_deductions
 
-    taux_lpp = matching_rows.iloc[0, 3]
-    cotisation_lpp = salaire_brut * taux_lpp
-    print(type(cotisation_lpp), cotisation_lpp)
+# Interface Streamlit
+st.title("🧾 Calcul du Salaire Net")
 
+# Téléchargement du fichier Excel
+fichier_excel = st.file_uploader("📂 Téléchargez le fichier Excel des impôts", type=["xlsx"])
 
-    
-    colonne_impot = correspondance_situation.get(situation_familiale)
-    if colonne_impot not in impots_data.columns:
-        raise ValueError(f"La colonne pour {situation_familiale} ({colonne_impot}) n'existe pas dans les impôts. Vérifiez : {impots_data.columns.tolist()}")
-    
-    impots_row = impots_data[(impots_data.iloc[:, 1] <= salaire_brut) & (impots_data.iloc[:, 2] >= salaire_brut)]
-    taux_impot = impots_row[colonne_impot].values[0] if not impots_row.empty else 0
-    impot = salaire_brut * (taux_impot / 100)
+if fichier_excel:
+    df_impots = pd.read_excel(fichier_excel)
 
-    salaire_brut = float(salaire_brut)
-    cotisation_lpp = float(cotisation_lpp)
-    impot = float(impot)
-    
-    salaire_net = salaire_brut - cotisation_lpp - impot
-    return salaire_net
+    # Entrées utilisateur
+    salaire_brut = st.number_input("💰 Salaire Brut (CHF)", min_value=0, value=13333, step=500)
+    age = st.number_input("🎂 Âge", min_value=18, max_value=70, value=30)
 
-# Interface utilisateur avec Streamlit
-st.title("Calculateur de Salaire Net")
+    # Calcul des résultats
+    salaire_net, cotisation_lpp, avs, ac, maternite, aanp, apg, impot_source, total_deductions = calculer_salaire_net(salaire_brut, age, df_impots)
 
-salaire_brut = st.number_input("Salaire brut mensuel (CHF)", min_value=0, step=100)
-age = st.selectbox("Âge", options=["25-34 ans", "35-44 ans", "45-54 ans", "55-65 ans"])
-situation_familiale = st.selectbox("Situation familiale", options=list(correspondance_situation.keys()))
+    # Affichage des résultats
+    st.subheader("📊 Résultat")
+    st.write(f"💰 **Salaire brut :** {salaire_brut:.2f} CHF")
+    st.write(f"🏦 **Caisse de pension LPP :** -{cotisation_lpp:.2f} CHF")
+    st.write(f"📉 **Total déductions sociales :** -{total_deductions:.2f} CHF")
+    st.write(f"✅ **Salaire net :** {salaire_net:.2f} CHF")
 
-
-if st.button("Calculer Salaire Net"):
-    lpp_data, impots_data = load_data()
-    salaire_net = calculer_salaire_net(salaire_brut, age, situation_familiale, lpp_data, impots_data)
-    st.success(f"Votre salaire net estimé est de : {salaire_net:.2f} CHF")
+    # Affichage sous forme de fiche de paie
+    st.subheader("📑 Fiche de paie")
+    st.write("| **Désignation**                 | **Montant (CHF)** |")
+    st.write("|--------------------------------|------------------|")
+    st.write(f"| 💰 Salaire Brut                 | {salaire_brut:.2f} |")
+    st.write(f"| 🏦 Caisse de pension LPP        | -{cotisation_lpp:.2f} |")
+    st.write(f"| 🏛 Retenue AVS                  | -{avs:.2f} |")
+    st.write(f"| 🏢 Cotisations AC               | -{ac:.2f} |")
+    st.write(f"| 🏥 Assurance maternité          | -{maternite:.2f} |")
+    st.write(f"| 🚑 Cotisations AANP             | -{aanp:.2f} |")
+    st.write(f"| 🏥 Cotisations APG              | -{apg:.2f} |")
+    st.write(f"| 🏛 Retenue impôt à la source    | -{impot_source:.2f} |")
+    st.write(f"| 📉 **Total déductions sociales** | -{total_deductions:.2f} |")
+    st.write(f"| ✅ **Salaire Net**              | **{salaire_net:.2f}** |")
