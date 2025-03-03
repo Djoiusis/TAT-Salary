@@ -4,10 +4,17 @@ import pandas as pd
 # URL du fichier IS.xlsx sur GitHub (Assurez-vous que c'est bien l'URL brute !)
 GITHUB_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/IS.xlsx"
 
+GITHUB_LOGO_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/logo.png"
+
+
 # Charger les données Excel depuis GitHub
 @st.cache_data
 def charger_is_data():
     return pd.read_excel(GITHUB_URL)
+
+# Affichage du logo
+st.image(GITHUB_LOGO_URL, width=200)  # Ajustez la largeur si nécessaire
+st.title("📊 Calculateur de Salaire Net")
 
 # Table des cotisations LPP (conservée en dur)
 LPP_TABLE = [
