@@ -91,3 +91,4 @@ if st.button("🧮 Calculer"):
     st.write("### 📉 Détail des Déductions :")
     for key, value in details_deductions.items():
         st.write(f"- **{key}** : {value:.2f} CHF")
+
