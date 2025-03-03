@@ -10,7 +10,7 @@ def charger_donnees(fichier):
 # Déterminer le taux LPP en fonction de l'âge
 def obtenir_taux_lpp(age, lpp_df):
     for _, row in lpp_df.iterrows():
-        age_min, age_max = map(int, row["Âge LPP"].split('-'))
+        age_min, age_max = map(int, row["Catégorie Age LPP"].split('-'))
         if age_min <= age <= age_max:
             return row["Total LPP"] / 100
     return 0
