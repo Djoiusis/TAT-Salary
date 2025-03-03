@@ -86,7 +86,7 @@ def calculer_salaire_net(salaire_brut_annuel, age, statut_marital, is_df, soumis
         "APG": 0.495 / 100,
     }
     cotisations = {key: salaire_brut_mensuel * taux for key, taux in taux_fixes.items()}
-    cotisations["LPP"] = salaire_brut_mensuel * obtenir_taux_lpp(age)
+    cotisations["LPP"] = (salaire_brut_mensuel * obtenir_taux_lpp(age))/2
 
     # Appliquer l'IS seulement si soumis à l'impôt à la source
     if soumis_is:
