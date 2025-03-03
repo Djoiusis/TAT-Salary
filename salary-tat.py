@@ -1,10 +1,11 @@
 import streamlit as st
 import pandas as pd
 
-# Charger les données depuis un fichier Excel
+# Charger les données Excel sous forme de dictionnaire de DataFrames
 @st.cache_data
 def charger_donnees(fichier):
-    return pd.ExcelFile(fichier)
+    xls = pd.ExcelFile(fichier)
+    return {sheet: pd.read_excel(xls, sheet_name=sheet) for sheet in xls.sheet_names}
 
 # Déterminer le taux LPP en fonction de l'âge
 def obtenir_taux_lpp(age, lpp_df):
@@ -12,22 +13,22 @@ def obtenir_taux_lpp(age, lpp_df):
         age_min, age_max = map(int, row["Âge LPP"].split('-'))
         if age_min <= age <= age_max:
             return row["Total LPP"] / 100
-    return 0  # Aucun taux si l'âge ne correspond pas
+    return 0
 
 # Déterminer le taux IS selon le salaire brut et le statut marital
 def obtenir_taux_is(salaire_brut, statut_marital, is_df):
     statut_ligne = is_df[is_df["Statut Marital"] == statut_marital]
     
     if statut_ligne.empty:
-        return 0  # Aucun taux trouvé
+        return 0
     
     statut_ligne = statut_ligne.sort_values(by="Salaire Min", ascending=True)
-
+    
     for _, row in statut_ligne.iterrows():
         if salaire_brut >= row["Salaire Min"] and salaire_brut <= row["Salaire Max"]:
             return row["Taux IS"] / 100
 
-    return 0  # Aucun taux trouvé
+    return 0
 
 # Fonction principale de calcul du salaire net
 def calculer_salaire_net(salaire_brut, age, statut_marital, lpp_df, is_df):
@@ -80,11 +81,11 @@ st.title("Calculateur de Salaire Net 💰")
 # Upload du fichier Excel
 fichier_excel = st.file_uploader("Téléchargez le fichier Excel", type=["xlsx"])
 if fichier_excel:
-    xls = charger_donnees(fichier_excel)
+    donnees = charger_donnees(fichier_excel)
 
     # Chargement des données
-    lpp_df = pd.read_excel(xls, sheet_name="LPP")
-    is_df = pd.read_excel(xls, sheet_name="ImpotSource")
+    lpp_df = donnees["LPP"]
+    is_df = donnees["ImpotSource"]
 
     # Entrée utilisateur
     salaire_brut = st.number_input("Salaire Brut (CHF)", min_value=0, value=13333)
@@ -121,4 +122,3 @@ if fichier_excel:
         st.write("### Détails des Déductions :")
         for key, value in details.items():
             st.write(f"- **{key}** : {value:.2f} CHF")
-            
