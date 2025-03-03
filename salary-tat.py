@@ -119,7 +119,31 @@ if fichier_excel:
 
     salaire_brut_annuel = st.number_input("💰 Salaire Brut Annuel (CHF)", min_value=0, value=160000)
     age = st.number_input("🎂 Âge", min_value=25, max_value=65, value=35)
-    situation_familiale = st.selectbox("👨‍👩‍👧‍👦 Situation familiale", options=is_df["Statut Marital"].unique())
+    # Sélection de la situation familiale
+    situation_familiale = st.selectbox(
+    "👨‍👩‍👧‍👦 Situation familiale",
+    options=[
+        "Célibataire sans enfant",
+        "Marié et le conjoint ne travaille pas et 0 enfant",
+        "Marié et le conjoint ne travaille pas et 1 enfant",
+        "Marié et le conjoint ne travaille pas et 2 enfants",
+        "Marié et le conjoint ne travaille pas et 3 enfants",
+        "Marié et le conjoint ne travaille pas et 4 enfants",
+        "Marié et le conjoint ne travaille pas et 5 enfants",
+        "Marié et les 2 conjoints travaillent et 0 enfant",
+        "Marié et les 2 conjoints travaillent et 1 enfant",
+        "Marié et les 2 conjoints travaillent et 2 enfants",
+        "Marié et les 2 conjoints travaillent et 3 enfants",
+        "Marié et les 2 conjoints travaillent et 4 enfants",
+        "Marié et les 2 conjoints travaillent et 5 enfants",
+        "Famille monoparentale et 1 enfant",
+        "Famille monoparentale et 2 enfants",
+        "Famille monoparentale et 3 enfants",
+        "Famille monoparentale et 4 enfants",
+        "Famille monoparentale et 5 enfants",
+    ],
+)
+
 
     if st.button("🧮 Calculer"):
         salaire_net_mensuel = calculer_salaire_net(salaire_brut_annuel, age, situation_familiale, is_df)
