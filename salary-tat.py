@@ -1,6 +1,11 @@
 import streamlit as st
 import pandas as pd
 
+# Charger les données Excel (IS.xlsx)
+@st.cache_data
+def charger_is_data(fichier):
+    return pd.read_excel(fichier)
+
 # Table des cotisations LPP (conservée en dur)
 LPP_TABLE = [
     (1, 25, 3.50, 0.70, 4.20),
@@ -46,10 +51,19 @@ LPP_TABLE = [
     (4, 65, 9.00, 1.20, 10.20),
 ]
 
-# Chargement des taux IS depuis le fichier Excel
-@st.cache_data
-def charger_donnees(fichier):
-    return pd.read_excel(fichier)
+# Fonction pour obtenir le taux IS depuis le fichier Excel
+def obtenir_taux_is(salaire_brut_annuel, statut_marital, is_df):
+    filtre = is_df[is_df["Statut Marital"] == statut_marital]
+    if filtre.empty:
+        return 0  # Si le statut n'est pas trouvé
+    
+    filtre = filtre.sort_values(by="Salaire Min", ascending=True)
+
+    for _, row in filtre.iterrows():
+        if row["Salaire Min"] <= salaire_brut_annuel <= row["Salaire Max"]:
+            return row["Taux IS"] / 100  # Convertir en décimal
+    
+    return 0  # Si aucune correspondance trouvée
 
 # Fonction pour obtenir le taux LPP
 def obtenir_taux_lpp(age):
@@ -57,19 +71,6 @@ def obtenir_taux_lpp(age):
         if row[1] == age:
             return row[4] / 100
     return 0
-
-# Fonction pour obtenir le taux IS depuis IS.xlsx
-def obtenir_taux_is(salaire_brut, statut_marital, is_df):
-    statut_ligne = is_df[is_df["Statut Marital"] == statut_marital]
-
-    if statut_ligne.empty:
-        return 0  # Retourne 0 si le statut n'existe pas
-
-    for _, row in statut_ligne.iterrows():
-        if salaire_brut >= row["Salaire Min"] and salaire_brut <= row["Salaire Max"]:
-            return row["Taux IS"] / 100
-
-    return 0  # Retourne 0 si aucun taux trouvé
 
 # Fonction principale de calcul du salaire net
 def calculer_salaire_net(salaire_brut_annuel, age, statut_marital, is_df):
@@ -93,7 +94,7 @@ def calculer_salaire_net(salaire_brut_annuel, age, statut_marital, is_df):
     taux_lpp = obtenir_taux_lpp(age)
     cotisation_lpp = salaire_brut_mensuel * taux_lpp
 
-    # Calcul du taux IS depuis IS.xlsx
+    # Obtenir le taux IS depuis Excel
     taux_is = obtenir_taux_is(salaire_brut_annuel, statut_marital, is_df)
     impot_source = salaire_brut_mensuel * taux_is
 
@@ -106,30 +107,20 @@ def calculer_salaire_net(salaire_brut_annuel, age, statut_marital, is_df):
     # Calcul du salaire net mensuel
     salaire_net_mensuel = salaire_brut_mensuel - total_deductions
 
-    return salaire_net_mensuel, taux_is * 100, {
-        "Retenue AVS": cotisation_avs,
-        "Cotisations AC": cotisation_ac,
-        "Assurance maternité": cotisation_maternite,
-        "Cotisations AANP": cotisation_aanp,
-        "Caisse de pension LPP": cotisation_lpp,
-        "Cotisations APG mal": cotisation_apg,
-        "Retenue impôt à la source": impot_source,
-        "Total Déductions": total_deductions,
-        "Salaire Net Mensuel": salaire_net_mensuel
-    }
+    return salaire_net_mensuel
 
 # Interface Streamlit
 st.title("Calculateur de Salaire Net 💰")
 
-# Upload du fichier IS.xlsx
+# Téléchargement du fichier IS.xlsx
 fichier_excel = st.file_uploader("📂 Téléchargez le fichier IS.xlsx", type=["xlsx"])
 if fichier_excel:
-    is_df = charger_donnees(fichier_excel)
+    is_df = charger_is_data(fichier_excel)
 
     salaire_brut_annuel = st.number_input("💰 Salaire Brut Annuel (CHF)", min_value=0, value=160000)
     age = st.number_input("🎂 Âge", min_value=25, max_value=65, value=35)
     situation_familiale = st.selectbox("👨‍👩‍👧‍👦 Situation familiale", options=is_df["Statut Marital"].unique())
 
     if st.button("🧮 Calculer"):
-        salaire_net_mensuel, taux_is, details = calculer_salaire_net(salaire_brut_annuel, age, situation_familiale, is_df)
+        salaire_net_mensuel = calculer_salaire_net(salaire_brut_annuel, age, situation_familiale, is_df)
         st.write(f"### 💰 Salaire Net Mensuel : {salaire_net_mensuel:.2f} CHF")
