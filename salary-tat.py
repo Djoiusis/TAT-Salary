@@ -75,7 +75,7 @@ def obtenir_taux_lpp(age):
     return 0
 
 # Fonction principale de calcul du salaire net
-def calculer_salaire_net(salaire_brut_annuel, age, statut_marital, is_df):
+def calculer_salaire_net(salaire_brut_annuel, age, statut_marital, is_df, soumis_is):
     salaire_brut_mensuel = salaire_brut_annuel / 12
     taux_fixes = {
         "AVS": 5.3 / 100,
@@ -117,7 +117,7 @@ soumis_is = nationalite in ["🇨🇭 Suisse", "🏷️ Permis C"]
 
 # Bouton de calcul
 if st.button("🧮 Calculer"):
-    salaire_net_mensuel, details_deductions = calculer_salaire_net(salaire_brut_annuel, age, situation_familiale, is_df)
+    salaire_net_mensuel, details_deductions = calculer_salaire_net(salaire_brut_annuel, age, situation_familiale, is_df, soumis_is)
     
     # Résultats
     st.write(f"### 💰 Salaire Net Mensuel : {salaire_net_mensuel:.2f} CHF")
