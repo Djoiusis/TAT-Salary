@@ -78,8 +78,6 @@ def calculer_salaire_net(salaire_brut, age, situation_familiale, lpp_data, impot
     cotisation_lpp = salaire_brut * taux_lpp
     print(type(cotisation_lpp), cotisation_lpp)
 
-    st.write(f"Valeur de cotisation LPP avant conversion: {cotisation_lpp}")
-
     
     colonne_impot = correspondance_situation.get(situation_familiale)
     if colonne_impot not in impots_data.columns:
