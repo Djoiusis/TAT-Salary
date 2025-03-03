@@ -86,6 +86,10 @@ def calculer_salaire_net(salaire_brut_annuel, age, statut_marital, is_df):
         "Contribution professionnelle": 0.7/100,
     }
     cotisations = {key: salaire_brut_mensuel * taux for key, taux in taux_fixes.items()}
+    # Appliquer l'IS seulement si soumis à l'impôt à la source
+    if soumis_is:
+        cotisations["Impôt Source"] = salaire_brut_mensuel * obtenir_taux_is(salaire_brut_annuel, statut_marital, is_df)
+
     cotisations["LPP"] = (salaire_brut_mensuel * obtenir_taux_lpp(age))/2
     cotisations["Impôt Source"] = salaire_brut_mensuel * obtenir_taux_is(salaire_brut_annuel, statut_marital, is_df)
     total_deductions = sum(cotisations.values())
@@ -108,6 +112,9 @@ colonnes_filtrees = [col for col in is_df.columns if col not in colonnes_a_exclu
 
 # Sélection du statut marital basé sur les colonnes du fichier Excel
 situation_familiale = st.selectbox("👨‍👩‍👧‍👦 Situation familiale", colonnes_filtrees)
+# Sélection du statut de résidence
+nationalite = st.radio("🌍 Statut de résidence", ["🇨🇭 Suisse", "🏷️ Permis C", "🌍 Autre (Imposé à la source)"])
+soumis_is = nationalite == "🌍 Autre (Imposé à la source)"
 
 # Bouton de calcul
 if st.button("🧮 Calculer"):
