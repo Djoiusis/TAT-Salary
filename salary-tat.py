@@ -82,7 +82,7 @@ def calculer_salaire_net(salaire_brut_annuel, age, statut_marital, is_df):
     cotisation_apg = salaire_brut_mensuel * taux_apg
 
     taux_lpp = obtenir_taux_lpp(age)
-    cotisation_lpp = salaire_brut_mensuel * taux_lpp
+    cotisation_lpp = (salaire_brut_mensuel * taux_lpp)/2
 
     taux_is = obtenir_taux_is(salaire_brut_annuel, statut_marital, is_df)
     impot_source = salaire_brut_mensuel * taux_is
