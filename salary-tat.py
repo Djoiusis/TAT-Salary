@@ -112,8 +112,8 @@ colonnes_filtrees = [col for col in is_df.columns if col not in colonnes_a_exclu
 # Sélection du statut marital basé sur les colonnes du fichier Excel
 situation_familiale = st.selectbox("👨‍👩‍👧‍👦 Situation familiale", colonnes_filtrees)
 # Sélection du statut de résidence
-nationalite = st.radio("🌍 Statut de résidence", ["🇨🇭 Suisse", "🏷️ Permis C", "🌍 Autre (Imposé à la source)"])
-soumis_is = nationalite == "🌍 Autre (Imposé à la source)"
+nationalite = st.radio("🌍 Statut de résidence", ["🇨🇭 Suisse", "🏷️ Permis C", "🌍 Autre (Non imposé à la source)"])
+soumis_is = nationalite in ["🇨🇭 Suisse", "🏷️ Permis C"]
 
 # Bouton de calcul
 if st.button("🧮 Calculer"):
