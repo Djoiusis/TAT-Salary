@@ -85,7 +85,7 @@ def calculer_salaire_net(salaire_brut_annuel, age, statut_marital, is_df):
         "APG": 0.495 / 100,
     }
     cotisations = {key: salaire_brut_mensuel * taux for key, taux in taux_fixes.items()}
-    cotisations["LPP"] = salaire_brut_mensuel * obtenir_taux_lpp(age)
+    cotisations["LPP"] = (salaire_brut_mensuel * obtenir_taux_lpp(age))/2
     cotisations["Impôt Source"] = salaire_brut_mensuel * obtenir_taux_is(salaire_brut_annuel, statut_marital, is_df)
     total_deductions = sum(cotisations.values())
     salaire_net_mensuel = salaire_brut_mensuel - total_deductions
