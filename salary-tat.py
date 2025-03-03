@@ -14,7 +14,6 @@ def charger_is_data():
 
 # Affichage du logo
 st.image(GITHUB_LOGO_URL, width=200)  # Ajustez la largeur si nécessaire
-st.title("📊 Calculateur de Salaire Net")
 
 # Table des cotisations LPP (conservée en dur)
 LPP_TABLE = [
