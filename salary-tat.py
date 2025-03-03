@@ -76,7 +76,7 @@ def calculer_salaire_net(salaire_brut, age, situation_familiale, lpp_data, impot
 
     taux_lpp = matching_rows.iloc[0, 3]
     cotisation_lpp = salaire_brut * taux_lpp
-    st.write(type(cotisation_lpp), cotisation_lpp)
+    st.write(type(cotisation_lpp))
 
     
     colonne_impot = correspondance_situation.get(situation_familiale)
