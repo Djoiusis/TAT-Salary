@@ -87,10 +87,10 @@ def calculer_salaire_net(salaire_brut_annuel, age, statut_marital, is_df, soumis
     }
     cotisations = {key: salaire_brut_mensuel * taux for key, taux in taux_fixes.items()}
     # Appliquer l'IS seulement si soumis à l'impôt à la source
-   if soumis_is:
-     cotisations["Impôt Source"] = salaire_brut_mensuel * obtenir_taux_is(salaire_brut_annuel, statut_marital, is_df)
-   else:
-     cotisations["Impôt Source"] = 0  # Ensure it's not deducted
+    if soumis_is:
+      cotisations["Impôt Source"] = salaire_brut_mensuel * obtenir_taux_is(salaire_brut_annuel, statut_marital, is_df)
+    else:
+      cotisations["Impôt Source"] = 0  # Ensure it's not deducted
 
 
     cotisations["LPP"] = (salaire_brut_mensuel * obtenir_taux_lpp(age))/2
