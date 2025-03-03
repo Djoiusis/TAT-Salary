@@ -83,6 +83,7 @@ def calculer_salaire_net(salaire_brut_annuel, age, statut_marital, is_df):
         "AANP": 0.63 / 100,
         "Maternité": 0.032 / 100,
         "APG": 0.495 / 100,
+        "Contribution professionnelle": 0.7/100,
     }
     cotisations = {key: salaire_brut_mensuel * taux for key, taux in taux_fixes.items()}
     cotisations["LPP"] = (salaire_brut_mensuel * obtenir_taux_lpp(age))/2
