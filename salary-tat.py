@@ -53,17 +53,19 @@ LPP_TABLE = [
 
 # Fonction pour obtenir le taux IS depuis le fichier Excel
 def obtenir_taux_is(salaire_brut_annuel, statut_marital, is_df):
-    filtre = is_df[is_df["Statut Marital"] == statut_marital]
-    if filtre.empty:
-        return 0  # Si le statut n'est pas trouvé
-    
-    filtre = filtre.sort_values(by="Salaire Min", ascending=True)
+    # Filtrer les tranches de salaire correspondant au salaire brut annuel
+    tranche = is_df[(is_df["Année Min"] <= salaire_brut_annuel) & (is_df["Année Max"] >= salaire_brut_annuel)]
 
-    for _, row in filtre.iterrows():
-        if row["Salaire Min"] <= salaire_brut_annuel <= row["Salaire Max"]:
-            return row["Taux IS"] / 100  # Convertir en décimal
-    
-    return 0  # Si aucune correspondance trouvée
+    # Vérifier si une tranche est trouvée
+    if tranche.empty:
+        return 0
+
+    # Vérifier si la colonne du statut marital existe dans le dataframe
+    if statut_marital in is_df.columns:
+        return tranche[statut_marital].values[0] / 100  # Convertir en décimal
+    else:
+        return 0  # Retourner 0 si le statut marital n'est pas trouvé
+
 
 # Fonction pour obtenir le taux LPP
 def obtenir_taux_lpp(age):
