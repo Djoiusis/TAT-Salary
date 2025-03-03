@@ -91,7 +91,6 @@ def calculer_salaire_net(salaire_brut_annuel, age, statut_marital, is_df):
         cotisations["Impôt Source"] = salaire_brut_mensuel * obtenir_taux_is(salaire_brut_annuel, statut_marital, is_df)
 
     cotisations["LPP"] = (salaire_brut_mensuel * obtenir_taux_lpp(age))/2
-    cotisations["Impôt Source"] = salaire_brut_mensuel * obtenir_taux_is(salaire_brut_annuel, statut_marital, is_df)
     total_deductions = sum(cotisations.values())
     salaire_net_mensuel = salaire_brut_mensuel - total_deductions
     return salaire_net_mensuel, cotisations
