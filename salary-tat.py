@@ -1,10 +1,12 @@
 import streamlit as st
 import pandas as pd
 
+GITHUB_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/IS.xlsx"
+
 # Charger les données Excel (IS.xlsx)
 @st.cache_data
 def charger_is_data(fichier):
-    return pd.read_excel(fichier)
+    return pd.read_excel(GITHUB_URL)
 
 # Table des cotisations LPP (conservée en dur)
 LPP_TABLE = [
