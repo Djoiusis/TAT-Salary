@@ -80,7 +80,7 @@ def calculer_salaire_net(salaire_brut, age, statut_marital):
 
     # Calcul de la cotisation LPP selon l'âge
     taux_lpp = obtenir_taux_lpp(age)
-    cotisation_lpp = salaire_brut * taux_lpp
+    cotisation_lpp = (salaire_brut * taux_lpp)/2
 
     # Calcul du taux IS automatique
     taux_is = obtenir_taux_is(salaire_brut, statut_marital)
