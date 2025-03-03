@@ -47,7 +47,7 @@ def load_data():
     lpp_data = lpp_data.dropna(how='all').reset_index(drop=True)
     
     # Fusionner la deuxième et la troisième ligne pour recréer les noms corrects
-    impots_data.columns = impots_data.iloc[0].fillna('') + " " + impots_data.iloc[1].fillna('')
+    impots_data.columns = impots_data.iloc[0].astype(str).fillna('') + " " + impots_data.iloc[1].astype(str).fillna('')
     impots_data = impots_data[2:].reset_index(drop=True)
     
     # Nettoyer les noms de colonnes
