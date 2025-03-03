@@ -4,7 +4,7 @@ import pandas as pd
 # URL du fichier IS.xlsx sur GitHub (Assurez-vous que c'est bien l'URL brute !)
 GITHUB_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/IS.xlsx"
 
-GITHUB_LOGO_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/logo.png"
+GITHUB_LOGO_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/LOGO-Talent-Access-Technologies-removebg.png"
 
 
 # Charger les données Excel depuis GitHub
