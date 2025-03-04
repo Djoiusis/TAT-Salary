@@ -12,18 +12,20 @@ GITHUB_LOGO_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/LO
 def charger_is_data():
     return pd.read_excel(GITHUB_URL_IS)
 
-# Mise en page avec colonnes
-col1, col2 = st.columns([3, 2])  # 60% - 40% pour l'affichage
+# 🌟 **Affichage du Logo Centré**
+st.markdown(
+    f"""
+    <div style="text-align: center;">
+        <img src="{GITHUB_LOGO_URL}" width="250">
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
-# Affichage du logo à droite
-with col2:
-    st.image(GITHUB_LOGO_URL, width=200)
+# 🌟 **Mise en page en deux colonnes**
+col1, col2 = st.columns(2)
 
-# Interface principale (Colonne de gauche)
-with col1:
-    st.title("📊 Calculateur de Salaire Net")
-
-# Table des cotisations LPP
+# **Table des cotisations LPP**
 LPP_TABLE = [
     (1, 25, 3.50, 0.70, 4.20),
     (2, 35, 5.00, 0.70, 5.70),
@@ -31,21 +33,21 @@ LPP_TABLE = [
     (4, 55, 9.00, 1.20, 10.20),
 ]
 
-# Fonction pour obtenir le taux IS depuis Excel
+# **Fonction pour obtenir le taux IS**
 def obtenir_taux_is(salaire_brut_annuel, statut_marital, is_df):
     tranche = is_df[(is_df["Année Min"] <= salaire_brut_annuel) & (is_df["Année Max"] >= salaire_brut_annuel)]
     if tranche.empty or statut_marital not in is_df.columns:
         return 0
     return tranche[statut_marital].values[0] / 100
 
-# Fonction pour obtenir le taux LPP
+# **Fonction pour obtenir le taux LPP**
 def obtenir_taux_lpp(age):
     for row in LPP_TABLE:
         if row[1] <= age < (row[1] + 10):
             return row[4] / 100
     return 0
 
-# Fonction principale de calcul du salaire net
+# **Fonction principale de calcul du salaire net**
 def calculer_salaire_net(salaire_brut_annuel, age, statut_marital, is_df, soumis_is):
     salaire_brut_mensuel = salaire_brut_annuel / 12
     taux_fixes = {
@@ -69,29 +71,26 @@ def calculer_salaire_net(salaire_brut_annuel, age, statut_marital, is_df, soumis
 
     return salaire_net_mensuel, salaire_brut_mensuel, cotisations
 
-# Chargement des données IS.xlsx
+# **Chargement des données IS.xlsx**
 is_df = charger_is_data()
 
-# Supprimer les colonnes inutiles
+# **Supprimer les colonnes inutiles**
 colonnes_filtrees = [col for col in is_df.columns if col not in ["Mois Max", "Unnamed: 5", "Unnamed: 6"]]
 
-# Interface utilisateur en deux colonnes
-col1, col2 = st.columns(2)
-
-# **Colonne 1 : Calcul du Salaire Net**
+# **💰 Colonne 1 : Calcul du Salaire Net**
 with col1:
     st.header("💰 Calcul du Salaire Net")
 
-    # Entrées utilisateur
+    # **Entrées utilisateur**
     salaire_brut_annuel = st.number_input("💰 Salaire Brut Annuel (CHF)", min_value=0, value=160000)
     age = st.number_input("🎂 Âge", min_value=25, max_value=65, value=35)
     situation_familiale = st.selectbox("👨‍👩‍👧‍👦 Situation familiale", colonnes_filtrees[4:])
 
-    # Sélection du statut de résidence
+    # **Sélection du statut de résidence**
     nationalite = st.radio("🌍 Statut de résidence", ["🇨🇭 Suisse", "🏷️ Permis C", "🌍 Autre (Imposé à la source)"])
     soumis_is = nationalite == "🌍 Autre (Imposé à la source)"
 
-    # Bouton de calcul
+    # **Bouton de calcul**
     if st.button("🧮 Calculer Salaire"):
         salaire_net_mensuel, salaire_brut_mensuel, details_deductions = calculer_salaire_net(
             salaire_brut_annuel, age, situation_familiale, is_df, soumis_is
@@ -102,15 +101,15 @@ with col1:
         for key, value in details_deductions.items():
             st.write(f"- **{key}** : {value:.2f} CHF")
 
-# **Colonne 2 : Calcul de la Marge & TJM Minimum**
+# **📊 Colonne 2 : Calcul de la Marge & TJM Minimum**
 with col2:
     st.header("📊 Calcul de la Marge & TJM Minimum")
 
-    # Entrées utilisateur pour la marge
+    # **Entrées utilisateur pour la marge**
     tjm_client = st.number_input("💰 TJM Client (CHF)", min_value=0, value=800)
     jours_travailles = st.number_input("📅 Nombre de jours travaillés par mois", min_value=1, max_value=30, value=20)
 
-    # Bouton de calcul du TJM
+    # **Bouton de calcul du TJM**
     if st.button("📈 Calculer TJM Minimum"):
         if salaire_brut_annuel > 0:
             salaire_brut_mensuel = salaire_brut_annuel / 12
