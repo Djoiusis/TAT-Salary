@@ -124,8 +124,7 @@ if st.button("🧮 Calculer"):
     for key, value in details_deductions.items():
         st.write(f"- **{key}** : {value:.2f} CHF")
 
-
-# 🔹 **Section Calcul de la Marge et TJM**
+# 🔹 **Section Calcul de la Marge et TJM Minimum**
 st.header("📊 Calcul de la Marge & TJM Minimum")
 
 # Entrées utilisateur pour la marge
@@ -134,11 +133,12 @@ jours_travailles = st.number_input("📅 Nombre de jours travaillés par mois", 
 
 # Bouton de calcul du TJM
 if st.button("📈 Calculer TJM Minimum"):
-    if "salaire_brut_mensuel" in st.session_state:
+    if "salaire_brut_annuel" in st.session_state:
+        salaire_brut_annuel = st.session_state["salaire_brut_annuel"]
         salaire_brut_mensuel = st.session_state["salaire_brut_mensuel"]
         
         revenus_mensuels = tjm_client * jours_travailles
-        tjm_minimum = (salaire_brut_mensuel / 0.7) / jours_travailles  # Marge de 30%
+        tjm_minimum = (salaire_brut_annuel / 12 / 0.7) / jours_travailles  # Marge de 30%
         marge_actuelle = (revenus_mensuels - salaire_brut_mensuel) / revenus_mensuels * 100
 
         st.write(f"### 📉 Marge Actuelle : {marge_actuelle:.2f} %")
