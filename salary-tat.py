@@ -4,7 +4,7 @@ import pandas as pd
 # URL du fichier IS.xlsx sur GitHub
 GITHUB_URL_IS = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/IS.xlsx"
 
-# URL du logo (Remplacez avec l'URL brute de votre logo sur GitHub)
+# URL du logo
 GITHUB_LOGO_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/LOGO-Talent-Access-Technologies-removebg.png"
 
 # Charger les données Excel depuis GitHub
@@ -21,9 +21,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
-# 🌟 **Mise en page en deux colonnes**
-col1, col2 = st.columns(2)
 
 # **Table des cotisations LPP**
 LPP_TABLE = [
@@ -69,60 +66,34 @@ def calculer_salaire_net(salaire_brut_annuel, age, statut_marital, is_df, soumis
     total_deductions = sum(cotisations.values())
     salaire_net_mensuel = salaire_brut_mensuel - total_deductions
 
-    return salaire_net_mensuel, salaire_brut_mensuel, cotisations
+    return salaire_net_mensuel, cotisations
 
 # **Chargement des données IS.xlsx**
 is_df = charger_is_data()
 
 # **Supprimer les colonnes inutiles**
-colonnes_filtrees = [col for col in is_df.columns if col not in ["Mois Max", "Unnamed: 5", "Unnamed: 6"]]
+colonnes_a_exclure = ["Mois Max", "Unnamed: 5", "Unnamed: 6", "INDEX", "Année Min", "Année Max", "Mois Min"]
+colonnes_filtrees = [col for col in is_df.columns if col not in colonnes_a_exclure]
 
-# **💰 Colonne 1 : Calcul du Salaire Net**
-with col1:
-    st.header("💰 Calcul du Salaire Net")
+# **💰 Calcul du Salaire Net**
+st.header("💰 Calcul du Salaire Net")
 
-    # **Entrées utilisateur**
-    salaire_brut_annuel = st.number_input("💰 Salaire Brut Annuel (CHF)", min_value=0, value=160000)
-    age = st.number_input("🎂 Âge", min_value=25, max_value=65, value=35)
-    situation_familiale = st.selectbox("👨‍👩‍👧‍👦 Situation familiale", colonnes_filtrees[4:])
+# **Entrées utilisateur**
+salaire_brut_annuel = st.number_input("💰 Salaire Brut Annuel (CHF)", min_value=0, value=160000)
+age = st.number_input("🎂 Âge", min_value=25, max_value=65, value=35)
+situation_familiale = st.selectbox("👨‍👩‍👧‍👦 Situation familiale", colonnes_filtrees[4:])
 
-    # **Sélection du statut de résidence**
-    nationalite = st.radio("🌍 Statut de résidence", ["🇨🇭 Suisse", "🏷️ Permis C", "🌍 Autre (Imposé à la source)"])
-    soumis_is = nationalite == "🌍 Autre (Imposé à la source)"
+# **Sélection du statut de résidence**
+nationalite = st.radio("🌍 Statut de résidence", ["🇨🇭 Suisse", "🏷️ Permis C", "🌍 Autre (Imposé à la source)"])
+soumis_is = nationalite == "🌍 Autre (Imposé à la source)"
 
-    # **Bouton de calcul**
-    if st.button("🧮 Calculer Salaire"):
-        salaire_net_mensuel, salaire_brut_mensuel, details_deductions = calculer_salaire_net(
-            salaire_brut_annuel, age, situation_familiale, is_df, soumis_is
-        )
+# **Bouton de calcul**
+if st.button("🧮 Calculer Salaire"):
+    salaire_net_mensuel, details_deductions = calculer_salaire_net(
+        salaire_brut_annuel, age, situation_familiale, is_df, soumis_is
+    )
 
-        st.write(f"### 💰 Salaire Net Mensuel : {salaire_net_mensuel:.2f} CHF")
-        st.write("### 📉 Détail des Déductions :")
-        for key, value in details_deductions.items():
-            st.write(f"- **{key}** : {value:.2f} CHF")
-
-# **📊 Colonne 2 : Calcul de la Marge & TJM Minimum**
-with col2:
-    st.header("📊 Calcul de la Marge & TJM Minimum")
-
-    # **Entrées utilisateur pour la marge**
-    tjm_client = st.number_input("💰 TJM Client (CHF)", min_value=0, value=800)
-    jours_travailles = st.number_input("📅 Nombre de jours travaillés par mois", min_value=1, max_value=30, value=20)
-
-    # **Bouton de calcul du TJM**
-    if st.button("📈 Calculer TJM Minimum"):
-        if salaire_brut_annuel > 0:
-            salaire_brut_mensuel = salaire_brut_annuel / 12
-            revenus_mensuels = tjm_client * jours_travailles
-            tjm_minimum = (salaire_brut_mensuel / 0.7) / jours_travailles  # Marge de 30%
-            marge_actuelle = (revenus_mensuels - salaire_brut_mensuel) / revenus_mensuels * 100
-
-            st.write(f"### 📉 Marge Actuelle : {marge_actuelle:.2f} %")
-            st.write(f"### ⚠️ TJM Minimum à respecter pour 30% de marge : {tjm_minimum:.2f} CHF")
-
-            if tjm_client >= tjm_minimum:
-                st.success("✅ Votre TJM couvre la marge requise de 30%")
-            else:
-                st.warning("⚠️ Votre TJM est trop bas pour assurer une marge de 30%")
-        else:
-            st.warning("⚠️ Veuillez d'abord calculer le salaire avant d'estimer la marge.")
+    st.write(f"### 💰 Salaire Net Mensuel : {salaire_net_mensuel:.2f} CHF")
+    st.write("### 📉 Détail des Déductions :")
+    for key, value in details_deductions.items():
+        st.write(f"- **{key}** : {value:.2f} CHF")
