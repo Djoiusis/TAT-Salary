@@ -5,7 +5,7 @@ import pandas as pd
 GITHUB_URL_IS = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/IS.xlsx"
 
 # URL du logo (Remplacez avec l'URL brute de votre logo sur GitHub)
-GITHUB_LOGO_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/logo.png"
+GITHUB_LOGO_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/LOGO-Talent-Access-Technologies-removebg.png"
 
 # Charger les données Excel depuis GitHub
 @st.cache_data
