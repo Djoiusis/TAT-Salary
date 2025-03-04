@@ -12,9 +12,16 @@ GITHUB_LOGO_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/LO
 def charger_is_data():
     return pd.read_excel(GITHUB_URL_IS)
 
-# Affichage du logo
-st.image(GITHUB_LOGO_URL, width=200)  # Ajustez la largeur si nécessaire
-st.title("📊 Calculateur de Salaire Net")
+# Mise en page avec colonnes
+col1, col2 = st.columns([3, 1])  # 75% - 25% pour l'affichage
+
+# Affichage du logo à droite
+with col2:
+    st.image(GITHUB_LOGO_URL, width=200)
+
+# Interface principale
+with col1:
+    st.title("📊 Calculateur de Salaire Net")
 
 # Table des cotisations LPP
 LPP_TABLE = [
