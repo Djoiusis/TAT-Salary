@@ -132,9 +132,11 @@ st.header("📊 Calcul de la Marge & TJM Minimum")
 tjm_client = st.number_input("💰 TJM Client (CHF)", min_value=0, value=800)
 jours_travailles = st.number_input("📅 Nombre de jours travaillés par mois", min_value=1, max_value=30, value=20)
 
-# Vérification que le salaire a bien été calculé avant de calculer la marge
+# Bouton de calcul du TJM
 if st.button("📈 Calculer TJM Minimum"):
-    if 'salaire_brut_mensuel' in globals():
+    if "salaire_brut_mensuel" in st.session_state:
+        salaire_brut_mensuel = st.session_state["salaire_brut_mensuel"]
+        
         revenus_mensuels = tjm_client * jours_travailles
         tjm_minimum = (salaire_brut_mensuel / 0.7) / jours_travailles  # Marge de 30%
         marge_actuelle = (revenus_mensuels - salaire_brut_mensuel) / revenus_mensuels * 100
