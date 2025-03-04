@@ -133,7 +133,7 @@ jours_travailles = st.number_input("📅 Nombre de jours travaillés par mois", 
 
 # Bouton de calcul du TJM
 if st.button("📈 Calculer TJM Minimum"):
-    if st.session_state["salaire_brut_mensuel"]:
+    if st.session_state["salaire_brut_mensuel"] is not None:
         salaire_brut_mensuel = st.session_state["salaire_brut_mensuel"]
         revenus_mensuels = tjm_client * jours_travailles
         tjm_minimum = (salaire_brut_mensuel / 0.7) / jours_travailles  # Marge de 30%
