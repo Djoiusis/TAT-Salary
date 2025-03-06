@@ -9,8 +9,8 @@ GITHUB_URL_IS = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/IS.x
 # 📌 URL du logo
 GITHUB_LOGO_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/LOGO-Talent-Access-Technologies-removebg.png"
 
-# 📌 URL du fond d'écran futuriste
-BACKGROUND_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/futuristic_background.jpg"
+# 📌 URL du fond d'écran GIF
+BACKGROUND_GIF_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/futuristic_background.gif"
 
 # 📌 Charger les données Excel depuis GitHub
 @st.cache_data
@@ -22,33 +22,38 @@ def charger_is_data():
         st.error("❌ Erreur : Impossible de télécharger le fichier Excel.")
         return None
 
-# 📌 **Ajout du style CSS pour un fond d’écran futuriste**
+# 📌 **Ajout du style CSS pour améliorer la lisibilité**
 st.markdown(
     f"""
     <style>
-        /* Ajout d'un fond d'écran futuriste */
+        /* 🌌 Ajout d'un fond GIF animé */
         .stApp {{
-            background: url("https://makeagif.com/i/1slvoV") no-repeat center center fixed;
+            background: url("{BACKGROUND_GIF_URL}") no-repeat center center fixed;
             background-size: cover;
         }}
-        /* Appliquer un fond semi-transparent aux blocs */
+
+        /* 🎨 Bloc semi-transparent */
         .block {{
-            background-color: rgba(0, 0, 0, 0.6);
-            padding: 20px;
-            border-radius: 10px;
+            background-color: rgba(0, 0, 0, 0.8);  /* Semi-opaque pour meilleure lisibilité */
+            padding: 25px;
+            border-radius: 15px;
             color: white;
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.2); /* Ombre légère */
         }}
-        /* Centrer le titre */
+
+        /* 🖋️ Amélioration de la police */
         .title {{
             text-align: center;
-            font-size: 28px;
+            font-size: 30px;
             font-weight: bold;
             color: white;
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.7); /* Ombre pour lisibilité */
         }}
-        /* Espacement des sections */
+
+        /* 📏 Espacement entre les blocs */
         .spacer {{
-            margin-top: 30px;
-            margin-bottom: 30px;
+            margin-top: 40px;
+            margin-bottom: 40px;
         }}
     </style>
     """,
@@ -131,32 +136,23 @@ with col2:
     # **Entrées utilisateur pour le portage**
     tjm_client = st.number_input("💰 TJM Client (CHF)", min_value=0, value=800)
     jours_travailles = st.number_input("📅 Jours travaillés par mois", min_value=1, max_value=30, value=20)
-    cout_gestion = st.slider("📊 Coût de gestion de la société de portage (%)", min_value=5, max_value=20, value=10)
 
     # **Calcul du salaire net en portage**
     if st.button("📈 Simuler Portage Salarial"):
         revenus_mensuels = tjm_client * jours_travailles
-        frais_gestion = revenus_mensuels * (cout_gestion / 100)
-        salaire_portage_avant_charges = revenus_mensuels - frais_gestion
-
-        # **Charges employeur spécifiques au portage**
-        taux_charges_employeur = {
-            "AAP": 0.0476 / 100,
-            "APG": 0.4800 / 100,
-            "AVS": 5.3000 / 100,
-            "AC": 1.1000 / 100,
-            "Allocations Familiales": 2.2500 / 100,
-            "Petite Enfance": 0.0700 / 100,
-            "LFP": 0.0820 / 100,
-            "Amat": 0.0320 / 100,
-        }
-
-        charges_employeur = sum([salaire_portage_avant_charges * taux for taux in taux_charges_employeur.values()])
-        salaire_net_portage = salaire_portage_avant_charges - charges_employeur
+        salaire_net_portage = revenus_mensuels  # Pas de frais de gestion
 
         st.write(f"### 📉 Salaire Net en Portage Salarial : {salaire_net_portage:.2f} CHF")
-        st.write(f"- 💰 **Revenus mensuels brut** : {revenus_mensuels:.2f} CHF")
-        st.write(f"- 🏦 **Coût de gestion (Portage)** : {frais_gestion:.2f} CHF")
-        st.write(f"- 🏥 **Charges employeur estimées** : {charges_employeur:.2f} CHF")
+
+    # **Boutons d'actions**
+    st.markdown('<br><br>', unsafe_allow_html=True)  # Ajoute un espace
+
+    # 📄 **Bouton Postuler**
+    if st.button("📄 Postuler avec une candidature par défaut"):
+        st.success("✅ Votre candidature a été envoyée avec succès !")
+
+    # 💼 **Bouton Opportunité**
+    if st.button("💼 Vous avez un client ou une opportunité ? On s’occupe de tout !"):
+        st.success("✅ Nous allons vous contacter rapidement pour organiser votre mission !")
 
     st.markdown('</div>', unsafe_allow_html=True)
