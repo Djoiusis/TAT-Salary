@@ -6,7 +6,7 @@ from io import BytesIO
 # 📌 URL du fichier IS.xlsx sur GitHub
 GITHUB_URL_IS = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/IS.xlsx"
 
-# 📌 URL du logo sur GitHub
+# 📌 URL du logo
 GITHUB_LOGO_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/LOGO-Talent-Access-Technologies-removebg.png"
 
 # 📌 Charger les données Excel depuis GitHub
@@ -38,7 +38,7 @@ if is_df is None:
 st.title("📊 Calculateur de Salaire Net et Simulation Portage Salarial")
 
 # 🌟 **Ajout d'un espace avant la mise en page**
-st.markdown("<br><br>", unsafe_allow_html=True)
+st.markdown("<br><hr><br>", unsafe_allow_html=True)
 
 # 📌 **Mise en page en deux colonnes**
 col1, col2 = st.columns(2)
@@ -84,8 +84,8 @@ with col1:
         for key, value in cotisations.items():
             st.write(f"- **{key}** : {value:.2f} CHF")
 
-# 🌟 **Ajout d'un espace après la première section**
-st.markdown("<br><br>", unsafe_allow_html=True)
+# 🌟 **Ajout d'un espace entre les sections**
+st.markdown("<br><hr><br>", unsafe_allow_html=True)
 
 # 🔹 **Colonne 2 : Simulation Portage Salarial**
 with col2:
@@ -102,18 +102,27 @@ with col2:
         frais_gestion = revenus_mensuels * (cout_gestion / 100)
         salaire_portage_avant_charges = revenus_mensuels - frais_gestion
 
-        # **Simulation des charges sociales**
-        taux_charges_sociales = 45 / 100  # Approximation charges patronales + salariales
-        charges_sociales = salaire_portage_avant_charges * taux_charges_sociales
-        salaire_net_portage = salaire_portage_avant_charges - charges_sociales
+        # **Charges employeur spécifiques au portage**
+        taux_charges_employeur = {
+            "AAP": 0.0476 / 100,
+            "APG": 0.4800 / 100,
+            "AVS": 5.3000 / 100,
+            "AC": 1.1000 / 100,
+            "Allocations Familiales": 2.2500 / 100,
+            "Petite Enfance": 0.0700 / 100,
+            "LFP": 0.0820 / 100,
+            "Amat": 0.0320 / 100,
+        }
+
+        charges_employeur = sum([salaire_portage_avant_charges * taux for taux in taux_charges_employeur.values()])
+        salaire_net_portage = salaire_portage_avant_charges - charges_employeur
 
         st.write(f"### 📉 Salaire Net en Portage Salarial : {salaire_net_portage:.2f} CHF")
         st.write(f"- 💰 **Revenus mensuels brut** : {revenus_mensuels:.2f} CHF")
         st.write(f"- 🏦 **Coût de gestion (Portage)** : {frais_gestion:.2f} CHF")
-        st.write(f"- 🏥 **Charges sociales estimées** : {charges_sociales:.2f} CHF")
+        st.write(f"- 🏥 **Charges employeur estimées** : {charges_employeur:.2f} CHF")
 
         if salaire_net_portage > salaire_net_mensuel:
             st.success("✅ Le portage salarial semble plus avantageux que le statut salarié !")
         else:
             st.warning("⚠️ Le statut salarié offre un meilleur revenu net après charges.")
-
