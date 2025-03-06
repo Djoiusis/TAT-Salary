@@ -28,7 +28,7 @@ st.markdown(
     <style>
         /* 🌌 Ajout d'un fond GIF animé */
         .stApp {{
-            background: url("https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/videoblocks_abstract_concept_modern_tech_white_waves_motion_background.gif") no-repeat center center fixed;
+            background: url("https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/background.jpg") no-repeat center center fixed;
             background-size: cover;
         }}
 
