@@ -9,6 +9,9 @@ GITHUB_URL_IS = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/IS.x
 # 📌 URL du logo
 GITHUB_LOGO_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/LOGO-Talent-Access-Technologies-removebg.png"
 
+# 📌 URL du fond d'écran futuriste
+BACKGROUND_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/futuristic_background.jpg"
+
 # 📌 Charger les données Excel depuis GitHub
 @st.cache_data
 def charger_is_data():
@@ -18,6 +21,39 @@ def charger_is_data():
     else:
         st.error("❌ Erreur : Impossible de télécharger le fichier Excel.")
         return None
+
+# 📌 **Ajout du style CSS pour un fond d’écran futuriste**
+st.markdown(
+    f"""
+    <style>
+        /* Ajout d'un fond d'écran futuriste */
+        .stApp {{
+            background: url("{BACKGROUND_URL}") no-repeat center center fixed;
+            background-size: cover;
+        }}
+        /* Appliquer un fond semi-transparent aux blocs */
+        .block {{
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+        }}
+        /* Centrer le titre */
+        .title {{
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+        }}
+        /* Espacement des sections */
+        .spacer {{
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # 📌 **Affichage du Logo Centré**
 st.markdown(
@@ -34,17 +70,15 @@ is_df = charger_is_data()
 if is_df is None:
     st.stop()
 
-# 📌 **Affichage du titre principal**
-st.title("📊 Calculateur de Salaire Net et Simulation Portage Salarial")
-
-# 🌟 **Ajout d'un espace avant la mise en page**
-st.markdown("<br><hr><br>", unsafe_allow_html=True)
+# 📌 **Espacement avant la mise en page**
+st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
 
 # 📌 **Mise en page en deux colonnes**
 col1, col2 = st.columns(2)
 
 # 🔹 **Colonne 1 : Calcul du Salaire Net**
 with col1:
+    st.markdown('<div class="block">', unsafe_allow_html=True)
     st.header("💰 Calcul du Salaire Net")
 
     # **Entrées utilisateur**
@@ -84,11 +118,14 @@ with col1:
         for key, value in cotisations.items():
             st.write(f"- **{key}** : {value:.2f} CHF")
 
-# 🌟 **Ajout d'un espace entre les sections**
-st.markdown("<br><hr><br>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# 🌟 **Espacement entre les blocs**
+st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
 
 # 🔹 **Colonne 2 : Simulation Portage Salarial**
 with col2:
+    st.markdown('<div class="block">', unsafe_allow_html=True)
     st.header("💼 Simulation Portage Salarial")
 
     # **Entrées utilisateur pour le portage**
@@ -122,7 +159,4 @@ with col2:
         st.write(f"- 🏦 **Coût de gestion (Portage)** : {frais_gestion:.2f} CHF")
         st.write(f"- 🏥 **Charges employeur estimées** : {charges_employeur:.2f} CHF")
 
-        if salaire_net_portage > salaire_net_mensuel:
-            st.success("✅ Le portage salarial semble plus avantageux que le statut salarié !")
-        else:
-            st.warning("⚠️ Le statut salarié offre un meilleur revenu net après charges.")
+    st.markdown('</div>', unsafe_allow_html=True)
