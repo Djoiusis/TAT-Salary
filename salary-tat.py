@@ -9,9 +9,6 @@ GITHUB_URL_IS = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/IS.x
 # 📌 URL du logo
 GITHUB_LOGO_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/LOGO-Talent-Access-Technologies-removebg.png"
 
-# 📌 URL du fond d'écran GIF
-BACKGROUND_GIF_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/videoblocks_abstract_concept_modern_tech_white_waves_motion_background.gif"
-
 # 📌 Charger les données Excel depuis GitHub
 @st.cache_data
 def charger_is_data():
@@ -26,31 +23,27 @@ def charger_is_data():
 st.markdown(
     f"""
     <style>
-        /* 🌌 Ajout d'un fond GIF animé */
         .stApp {{
             background: url("https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/background.jpg") no-repeat center center fixed;
             background-size: cover;
         }}
 
-        /* 🎨 Bloc semi-transparent */
         .block {{
-            background-color: rgba(0, 0, 0, 0.8);  /* Semi-opaque pour meilleure lisibilité */
+            background-color: rgba(0, 0, 0, 0.8);
             padding: 25px;
             border-radius: 15px;
             color: white;
-            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.2); /* Ombre légère */
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.2);
         }}
 
-        /* 🖋️ Amélioration de la police */
         .title {{
             text-align: center;
             font-size: 30px;
             font-weight: bold;
             color: white;
-            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.7); /* Ombre pour lisibilité */
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.7);
         }}
 
-        /* 📏 Espacement entre les blocs */
         .spacer {{
             margin-top: 40px;
             margin-bottom: 40px;
@@ -102,7 +95,9 @@ with col1:
     # **Bouton de calcul**
     if st.button("🧮 Calculer Salaire"):
         salaire_brut_mensuel = salaire_brut_annuel / 12
-        taux_is = 0 if not soumis_is else (is_df[situation_familiale].loc[(is_df["Année Min"] <= salaire_brut_annuel) & (is_df["Année Max"] >= salaire_brut_annuel)].values[0] / 100)
+        taux_is = 0 if not soumis_is else (is_df[situation_familiale].loc[
+            (is_df["Année Min"] <= salaire_brut_annuel) & (is_df["Année Max"] >= salaire_brut_annuel)
+        ].values[0] / 100)
 
         # **Calcul des cotisations**
         taux_fixes = {
@@ -137,22 +132,28 @@ with col2:
     tjm_client = st.number_input("💰 TJM Client (CHF)", min_value=0, value=800)
     jours_travailles = st.number_input("📅 Jours travaillés par mois", min_value=1, max_value=30, value=20)
 
+    # **Charges employeur en portage**
+    charges_employeur = {
+        "AVS": 5.3 / 100,
+        "AC": 1.1 / 100,
+        "Alloc. Familiale": 2.25 / 100,
+        "Petite Enfance": 0.07 / 100,
+        "LFP": 0.082 / 100,
+        "Amat": 0.032 / 100,
+        "AAP": 0.0476 / 100,
+        "APG": 0.48 / 100,
+    }
+
     # **Calcul du salaire net en portage**
     if st.button("📈 Simuler Portage Salarial"):
         revenus_mensuels = tjm_client * jours_travailles
-        salaire_net_portage = revenus_mensuels  # Pas de frais de gestion
+        cout_employeur_total = sum(revenus_mensuels * taux for taux in charges_employeur.values())
+
+        salaire_net_portage = revenus_mensuels - cout_employeur_total
 
         st.write(f"### 📉 Salaire Net en Portage Salarial : {salaire_net_portage:.2f} CHF")
-
-    # **Boutons d'actions**
-    st.markdown('<br><br>', unsafe_allow_html=True)  # Ajoute un espace
-
-    # 📄 **Bouton Postuler**
-    if st.button("📄 Postuler avec une candidature par défaut"):
-        st.success("✅ Votre candidature a été envoyée avec succès !")
-
-    # 💼 **Bouton Opportunité**
-    if st.button("💼 Vous avez un client ou une opportunité ? On s’occupe de tout !"):
-        st.success("✅ Nous allons vous contacter rapidement pour organiser votre mission !")
+        st.write("### 📋 Détail des Charges Employeur :")
+        for key, value in charges_employeur.items():
+            st.write(f"- **{key}** : {revenus_mensuels * value:.2f} CHF")
 
     st.markdown('</div>', unsafe_allow_html=True)
