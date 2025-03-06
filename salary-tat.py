@@ -28,7 +28,7 @@ st.markdown(
     <style>
         /* Ajout d'un fond d'écran futuriste */
         .stApp {{
-            background: url("https://ryansechrest.com/content/images/2022/08/nodes.gif") no-repeat center center fixed;
+            background: url("https://i.gifer.com/J5A.gif") no-repeat center center fixed;
             background-size: cover;
         }}
         /* Appliquer un fond semi-transparent aux blocs */
