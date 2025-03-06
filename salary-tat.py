@@ -1,18 +1,25 @@
 import streamlit as st
 import pandas as pd
+import requests
+from io import BytesIO
 
-# URL du fichier IS.xlsx sur GitHub
+# 📌 URL du fichier IS.xlsx sur GitHub
 GITHUB_URL_IS = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/IS.xlsx"
 
-# URL du logo
+# 📌 URL du logo sur GitHub
 GITHUB_LOGO_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/LOGO-Talent-Access-Technologies-removebg.png"
 
-# Charger les données Excel depuis GitHub
+# 📌 Charger les données Excel depuis GitHub
 @st.cache_data
 def charger_is_data():
-    return pd.read_excel(GITHUB_URL_IS)
+    response = requests.get(GITHUB_URL_IS)
+    if response.status_code == 200:
+        return pd.read_excel(BytesIO(response.content), engine="openpyxl")
+    else:
+        st.error("❌ Erreur : Impossible de télécharger le fichier Excel.")
+        return None
 
-# 🌟 **Affichage du Logo Centré**
+# 📌 **Affichage du Logo Centré**
 st.markdown(
     f"""
     <div style="text-align: center;">
@@ -22,78 +29,73 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# **Table des cotisations LPP**
-LPP_TABLE = [
-    (1, 25, 3.50, 0.70, 4.20),
-    (2, 35, 5.00, 0.70, 5.70),
-    (3, 45, 7.50, 1.20, 8.70),
-    (4, 55, 9.00, 1.20, 10.20),
-]
-
-# **Fonction pour obtenir le taux IS**
-def obtenir_taux_is(salaire_brut_annuel, statut_marital, is_df):
-    tranche = is_df[(is_df["Année Min"] <= salaire_brut_annuel) & (is_df["Année Max"] >= salaire_brut_annuel)]
-    if tranche.empty or statut_marital not in is_df.columns:
-        return 0
-    return tranche[statut_marital].values[0] / 100
-
-# **Fonction pour obtenir le taux LPP**
-def obtenir_taux_lpp(age):
-    for row in LPP_TABLE:
-        if row[1] <= age < (row[1] + 10):
-            return row[4] / 100
-    return 0
-
-# **Fonction principale de calcul du salaire net**
-def calculer_salaire_net(salaire_brut_annuel, age, statut_marital, is_df, soumis_is):
-    salaire_brut_mensuel = salaire_brut_annuel / 12
-    taux_fixes = {
-        "AVS": 5.3 / 100,
-        "AC": 1.1 / 100,
-        "AANP": 0.63 / 100,
-        "Maternité": 0.032 / 100,
-        "APG": 0.495 / 100,
-    }
-    
-    cotisations = {key: salaire_brut_mensuel * taux for key, taux in taux_fixes.items()}
-    cotisations["LPP"] = (salaire_brut_mensuel * obtenir_taux_lpp(age)) / 2
-
-    # Appliquer l'IS seulement si soumis à l'impôt à la source
-    cotisations["Impôt Source"] = 0
-    if soumis_is:
-        cotisations["Impôt Source"] = salaire_brut_mensuel * obtenir_taux_is(salaire_brut_annuel, statut_marital, is_df)
-    
-    total_deductions = sum(cotisations.values())
-    salaire_net_mensuel = salaire_brut_mensuel - total_deductions
-
-    return salaire_net_mensuel, cotisations
-
-# **Chargement des données IS.xlsx**
+# 📌 **Chargement des données IS.xlsx**
 is_df = charger_is_data()
+if is_df is None:
+    st.stop()
 
-# **Supprimer les colonnes inutiles**
-colonnes_a_exclure = ["Mois Max", "Unnamed: 5", "Unnamed: 6", "INDEX", "Année Min", "Année Max", "Mois Min"]
-colonnes_filtrees = [col for col in is_df.columns if col not in colonnes_a_exclure]
+# 📌 **Affichage du titre principal**
+st.title("📊 Calculateur de Salaire Net et Simulation Portage Salarial")
 
-# **💰 Calcul du Salaire Net**
-st.header("💰 Calcul du Salaire Net")
+# 🌟 **Ajout d'un espace avant la mise en page**
+st.markdown("<br><br>", unsafe_allow_html=True)
 
-# **Entrées utilisateur**
-salaire_brut_annuel = st.number_input("💰 Salaire Brut Annuel (CHF)", min_value=0, value=160000)
-age = st.number_input("🎂 Âge", min_value=25, max_value=65, value=35)
-situation_familiale = st.selectbox("👨‍👩‍👧‍👦 Situation familiale", colonnes_filtrees[4:])
+# 📌 **Mise en page en deux colonnes**
+col1, col2 = st.columns(2)
 
-# **Sélection du statut de résidence**
-nationalite = st.radio("🌍 Statut de résidence", ["🇨🇭 Suisse", "🏷️ Permis C", "🌍 Autre (Imposé à la source)"])
-soumis_is = nationalite == "🌍 Autre (Imposé à la source)"
+# 🔹 **Colonne 1 : Calcul du Salaire Net**
+with col1:
+    st.header("💰 Calcul du Salaire Net")
 
-# **Bouton de calcul**
-if st.button("🧮 Calculer Salaire"):
-    salaire_net_mensuel, details_deductions = calculer_salaire_net(
-        salaire_brut_annuel, age, situation_familiale, is_df, soumis_is
-    )
+    # **Entrées utilisateur**
+    salaire_brut_annuel = st.number_input("💰 Salaire Brut Annuel (CHF)", min_value=0, value=160000)
+    age = st.number_input("🎂 Âge", min_value=25, max_value=65, value=35)
 
-    st.write(f"### 💰 Salaire Net Mensuel : {salaire_net_mensuel:.2f} CHF")
-    st.write("### 📉 Détail des Déductions :")
-    for key, value in details_deductions.items():
-        st.write(f"- **{key}** : {value:.2f} CHF")
+    # **Sélection de la situation familiale**
+    colonnes_a_exclure = ["Mois Max", "Unnamed: 5", "Unnamed: 6", "INDEX", "Année Min", "Année Max", "Mois Min"]
+    colonnes_filtrees = [col for col in is_df.columns if col not in colonnes_a_exclure]
+    situation_familiale = st.selectbox("👨‍👩‍👧‍👦 Situation familiale", colonnes_filtrees[4:])
+
+    # **Sélection du statut de résidence**
+    nationalite = st.radio("🌍 Statut de résidence", ["🇨🇭 Suisse", "🏷️ Permis C", "🌍 Autre (Imposé à la source)"])
+    soumis_is = nationalite == "🌍 Autre (Imposé à la source)"
+
+    # **Bouton de calcul**
+    if st.button("🧮 Calculer Salaire"):
+        salaire_brut_mensuel = salaire_brut_annuel / 12
+        taux_is = 0 if not soumis_is else (is_df[situation_familiale].loc[(is_df["Année Min"] <= salaire_brut_annuel) & (is_df["Année Max"] >= salaire_brut_annuel)].values[0] / 100)
+
+        # **Calcul des cotisations**
+        taux_fixes = {
+            "AVS": 5.3 / 100,
+            "AC": 1.1 / 100,
+            "AANP": 0.63 / 100,
+            "Maternité": 0.032 / 100,
+            "APG": 0.495 / 100,
+        }
+        cotisations = {key: salaire_brut_mensuel * taux for key, taux in taux_fixes.items()}
+        cotisations["Impôt Source"] = salaire_brut_mensuel * taux_is
+
+        total_deductions = sum(cotisations.values())
+        salaire_net_mensuel = salaire_brut_mensuel - total_deductions
+
+        st.write(f"### 💰 Salaire Net Mensuel : {salaire_net_mensuel:.2f} CHF")
+        st.write("### 📉 Détail des Déductions :")
+        for key, value in cotisations.items():
+            st.write(f"- **{key}** : {value:.2f} CHF")
+
+# 🌟 **Ajout d'un espace après la première section**
+st.markdown("<br><br>", unsafe_allow_html=True)
+
+# 🔹 **Colonne 2 : Simulation Portage Salarial**
+with col2:
+    st.header("💼 Simulation Portage Salarial")
+
+    # **Entrées utilisateur pour le portage**
+    tjm_client = st.number_input("💰 TJM Client (CHF)", min_value=0, value=800)
+    jours_travailles = st.number_input("📅 Jours travaillés par mois", min_value=1, max_value=30, value=20)
+    cout_gestion = st.slider("📊 Coût de gestion de la société de portage (%)", min_value=5, max_value=20, value=10)
+
+    # **Calcul du salaire net en portage**
+    if st.button("📈 Simuler Portage Salarial"):
+        revenus_mensuels =
