@@ -156,4 +156,11 @@ with col2:
         for key, value in charges_employeur.items():
             st.write(f"- **{key}** : {revenus_mensuels * value:.2f} CHF")
 
+    # **Boutons d'action**
+    if st.button("📄 Postuler avec une candidature par défaut"):
+        st.success("✅ Votre candidature a été envoyée avec succès !")
+
+    if st.button("💼 Vous avez un client ou une opportunité ? On s’occupe de tout !"):
+        st.success("✅ Nous allons vous contacter rapidement pour organiser votre mission !")
+
     st.markdown('</div>', unsafe_allow_html=True)
