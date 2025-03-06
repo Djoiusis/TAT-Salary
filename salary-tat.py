@@ -19,7 +19,7 @@ def charger_is_data():
         st.error("❌ Erreur : Impossible de télécharger le fichier Excel.")
         return None
 
-# 📌 **Ajout du style CSS pour améliorer la lisibilité**
+# 📌 **Ajout du style CSS**
 st.markdown(
     f"""
     <style>
@@ -49,14 +49,20 @@ st.markdown(
             margin-bottom: 40px;
         }}
 
-        /* Style pour la popup */
+        /* Style pour le bouton Postuler */
+        .postuler {{
+            text-align: center;
+            margin-top: 20px;
+        }}
+
+        /* Style de la popup */
         .modal {{
             position: fixed;
             z-index: 999;
             left: 50%;
             top: 50%;
             transform: translate(-50%, -50%);
-            width: 50%;
+            width: 40%;
             background-color: white;
             padding: 20px;
             box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
@@ -122,25 +128,33 @@ with col2:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 🌟 **Popup pour postuler**
+# 🌟 **Bouton Postuler (Ouvre la popup)**
 st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
-with st.expander("📄 Postuler avec un CV"):
-    st.subheader("🔍 Informations du Candidat")
-    
-    # 📂 Upload de CV
-    cv = st.file_uploader("📂 Importer votre CV (PDF uniquement)", type=["pdf"])
-    
-    # 📞 Champ de numéro de téléphone
-    telephone = st.text_input("📞 Numéro de téléphone", placeholder="Ex : +41 79 123 45 67")
-    
-    # ✅ Bouton de validation
-    if st.button("📩 Envoyer la Candidature"):
-        if cv is not None and telephone:
-            st.success("✅ Candidature envoyée avec succès ! Nous vous contacterons bientôt.")
-        else:
-            st.warning("⚠️ Veuillez renseigner un numéro de téléphone et importer un CV.")
+if st.button("📄 Postuler"):
+    st.session_state["popup_active"] = True
 
-# 🌟 **Bouton Opportunité**
-st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
-if st.button("💼 Vous avez un client ou une opportunité ? On s’occupe de tout !"):
-    st.success("✅ Nous allons vous contacter rapidement pour organiser votre mission !")
+# 🌟 **Popup pour renseigner le CV et le numéro de téléphone**
+if "popup_active" in st.session_state and st.session_state["popup_active"]:
+    with st.container():
+        st.markdown('<div class="modal">', unsafe_allow_html=True)
+        st.subheader("📩 Envoyer ma candidature")
+
+        # 📂 Upload du CV
+        cv = st.file_uploader("📂 Importer votre CV (PDF uniquement)", type=["pdf"])
+        
+        # 📞 Champ de numéro de téléphone
+        telephone = st.text_input("📞 Numéro de téléphone", placeholder="Ex : +41 79 123 45 67")
+
+        # ✅ Bouton d'envoi
+        if st.button("📩 Confirmer ma candidature"):
+            if cv is not None and telephone:
+                st.success("✅ Candidature envoyée avec succès ! Nous vous contacterons bientôt.")
+                st.session_state["popup_active"] = False  # Fermer la popup
+            else:
+                st.warning("⚠️ Veuillez remplir tous les champs.")
+
+        # Bouton de fermeture
+        if st.button("❌ Annuler"):
+            st.session_state["popup_active"] = False  # Fermer la popup
+
+        st.markdown('</div>', unsafe_allow_html=True)
