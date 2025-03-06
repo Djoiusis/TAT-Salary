@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 import requests
 from io import BytesIO
-import smtplib
-from email.message import EmailMessage
 
 # 📌 URL du fichier IS.xlsx sur GitHub
 GITHUB_URL_IS = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/IS.xlsx"
@@ -20,6 +18,18 @@ def charger_is_data():
     else:
         st.error("❌ Erreur : Impossible de télécharger le fichier Excel.")
         return None
+
+# 📌 **Fonction pour obtenir le taux LPP en fonction de l'âge**
+def obtenir_taux_lpp(age):
+    if 25 <= age < 35:
+        return 4.20 / 100
+    elif 35 <= age < 45:
+        return 5.70 / 100
+    elif 45 <= age < 55:
+        return 8.70 / 100
+    elif 55 <= age <= 65:
+        return 10.20 / 100
+    return 0
 
 # 📌 **Ajout du style CSS**
 st.markdown(
@@ -50,19 +60,6 @@ st.markdown(
             margin-top: 40px;
             margin-bottom: 40px;
         }}
-
-        .modal {{
-            position: fixed;
-            z-index: 999;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            width: 40%;
-            background-color: white;
-            padding: 20px;
-            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
-            border-radius: 10px;
-        }}
     </style>
     """,
     unsafe_allow_html=True
@@ -89,7 +86,7 @@ st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
 # 📌 **Mise en page en deux colonnes**
 col1, col2 = st.columns(2)
 
-# 🔹 **Colonne 1 : Calcul du Salaire Net**
+# 🔹 **Colonne 1 : Calcul du Salaire Net (CDI)**
 with col1:
     st.markdown('<div class="block">', unsafe_allow_html=True)
     st.header("💰 Calcul du Salaire Net (CDI)")
@@ -116,6 +113,7 @@ with col1:
             "APG": 0.495 / 100,
         }
         cotisations = {key: salaire_brut_mensuel * taux for key, taux in taux_fixes.items()}
+        cotisations["LPP"] = (salaire_brut_mensuel * obtenir_taux_lpp(age)) / 2
         cotisations["Impôt Source"] = salaire_brut_mensuel * taux_is
 
         total_deductions = sum(cotisations.values())
@@ -138,33 +136,22 @@ with col2:
 
     if st.button("📈 Calculer Salaire Brut en Portage"):
         revenus_mensuels = tjm_client * jours_travailles
-        cout_employeur = revenus_mensuels * 0.08834  # Charges employeur 8.834%
-        salaire_net_portage = revenus_mensuels - cout_employeur
 
-        st.write(f"### 📉 Salaire Brut en Portage : {revenus_mensuels:.2f} CHF")
-        st.write(f"### 🏢 Coût Employeur : {cout_employeur:.2f} CHF")
-        st.write(f"### 💰 Salaire Net Portage : {salaire_net_portage:.2f} CHF")
+        # Charges employé en portage
+        charges_employe = {
+            "AVS": 5.3 / 100,
+            "AC": 1.1 / 100,
+            "AANP": 0.63 / 100,
+            "Maternité": 0.032 / 100,
+            "APG": 0.495 / 100,
+            "LPP": obtenir_taux_lpp(age) / 2
+        }
+        total_charges_employe = sum(revenus_mensuels * taux for taux in charges_employe.values())
 
-    st.markdown('</div>', unsafe_allow_html=True)
+        # Salaire Brut en Portage après déduction des charges employé
+        salaire_brut_portage = revenus_mensuels - total_charges_employe
 
-# 🌟 **Bouton Postuler**
-st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
-if st.button("📄 Postuler"):
-    st.session_state["popup_active"] = True
-
-# **Popup avec upload CV + numéro de téléphone**
-if "popup_active" in st.session_state and st.session_state["popup_active"]:
-    st.markdown('<div class="modal">', unsafe_allow_html=True)
-    st.subheader("📩 Envoyer ma candidature")
-
-    cv = st.file_uploader("📂 Importer votre CV (PDF uniquement)", type=["pdf"])
-    telephone = st.text_input("📞 Numéro de téléphone", placeholder="Ex : +41 79 123 45 67")
-
-    if st.button("📩 Confirmer ma candidature"):
-        st.success("✅ Candidature envoyée avec succès !")
-        st.session_state["popup_active"] = False
-
-    if st.button("❌ Annuler"):
-        st.session_state["popup_active"] = False
+        st.write(f"### 📉 Salaire Brut en Portage : {salaire_brut_portage:.2f} CHF")
+        st.write(f"### 💰 Total Charges Employé : {total_charges_employe:.2f} CHF")
 
     st.markdown('</div>', unsafe_allow_html=True)
