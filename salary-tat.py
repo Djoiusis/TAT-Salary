@@ -98,4 +98,22 @@ with col2:
 
     # **Calcul du salaire net en portage**
     if st.button("📈 Simuler Portage Salarial"):
-        revenus_mensuels =
+        revenus_mensuels = tjm_client * jours_travailles
+        frais_gestion = revenus_mensuels * (cout_gestion / 100)
+        salaire_portage_avant_charges = revenus_mensuels - frais_gestion
+
+        # **Simulation des charges sociales**
+        taux_charges_sociales = 45 / 100  # Approximation charges patronales + salariales
+        charges_sociales = salaire_portage_avant_charges * taux_charges_sociales
+        salaire_net_portage = salaire_portage_avant_charges - charges_sociales
+
+        st.write(f"### 📉 Salaire Net en Portage Salarial : {salaire_net_portage:.2f} CHF")
+        st.write(f"- 💰 **Revenus mensuels brut** : {revenus_mensuels:.2f} CHF")
+        st.write(f"- 🏦 **Coût de gestion (Portage)** : {frais_gestion:.2f} CHF")
+        st.write(f"- 🏥 **Charges sociales estimées** : {charges_sociales:.2f} CHF")
+
+        if salaire_net_portage > salaire_net_mensuel:
+            st.success("✅ Le portage salarial semble plus avantageux que le statut salarié !")
+        else:
+            st.warning("⚠️ Le statut salarié offre un meilleur revenu net après charges.")
+
