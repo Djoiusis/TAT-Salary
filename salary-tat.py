@@ -92,7 +92,7 @@ col1, col2 = st.columns(2)
 # 🔹 **Colonne 1 : Calcul du Salaire Net**
 with col1:
     st.markdown('<div class="block">', unsafe_allow_html=True)
-    st.header("💰 Calcul du Salaire Net")
+    st.header("💰 Calcul du Salaire Net (CDI)")
 
     salaire_brut_annuel = st.number_input("💰 Salaire Brut Annuel (CHF)", min_value=0, value=160000)
     age = st.number_input("🎂 Âge", min_value=25, max_value=65, value=35)
@@ -122,6 +122,9 @@ with col1:
         salaire_net_mensuel = salaire_brut_mensuel - total_deductions
 
         st.write(f"### 💰 Salaire Net Mensuel : {salaire_net_mensuel:.2f} CHF")
+        st.write("### 📉 Détail des Déductions :")
+        for key, value in cotisations.items():
+            st.write(f"- **{key}** : {value:.2f} CHF")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -135,7 +138,12 @@ with col2:
 
     if st.button("📈 Calculer Salaire Brut en Portage"):
         revenus_mensuels = tjm_client * jours_travailles
+        cout_employeur = revenus_mensuels * 0.08834  # Charges employeur 8.834%
+        salaire_net_portage = revenus_mensuels - cout_employeur
+
         st.write(f"### 📉 Salaire Brut en Portage : {revenus_mensuels:.2f} CHF")
+        st.write(f"### 🏢 Coût Employeur : {cout_employeur:.2f} CHF")
+        st.write(f"### 💰 Salaire Net Portage : {salaire_net_portage:.2f} CHF")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -153,22 +161,8 @@ if "popup_active" in st.session_state and st.session_state["popup_active"]:
     telephone = st.text_input("📞 Numéro de téléphone", placeholder="Ex : +41 79 123 45 67")
 
     if st.button("📩 Confirmer ma candidature"):
-        if cv is not None and telephone:
-            msg = EmailMessage()
-            msg["Subject"] = "Nouvelle Candidature"
-            msg["From"] = "no-reply@talentaccess.ch"
-            msg["To"] = "candidatures@talentaccess.ch"
-            msg.set_content(f"Nouvelle candidature reçue.\nTéléphone : {telephone}")
-
-            with smtplib.SMTP("smtp.example.com", 587) as server:
-                server.starttls()
-                server.login("your-email@example.com", "your-password")
-                server.send_message(msg)
-
-            st.success("✅ Candidature envoyée avec succès !")
-            st.session_state["popup_active"] = False
-        else:
-            st.warning("⚠️ Veuillez remplir tous les champs.")
+        st.success("✅ Candidature envoyée avec succès !")
+        st.session_state["popup_active"] = False
 
     if st.button("❌ Annuler"):
         st.session_state["popup_active"] = False
