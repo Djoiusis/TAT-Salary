@@ -10,7 +10,7 @@ GITHUB_URL_IS = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/IS.x
 GITHUB_LOGO_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/LOGO-Talent-Access-Technologies-removebg.png"
 
 # 📌 URL du fond d'écran GIF
-BACKGROUND_GIF_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/futuristic_background.gif"
+BACKGROUND_GIF_URL = "https://makeagif.com/i/5j1gUS"
 
 # 📌 Charger les données Excel depuis GitHub
 @st.cache_data
