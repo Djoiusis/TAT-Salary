@@ -28,7 +28,7 @@ st.markdown(
     <style>
         /* 🌌 Ajout d'un fond GIF animé */
         .stApp {{
-            background: url("3284182.jpg") no-repeat center center fixed;
+            background: url("https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/3284182.jpg") no-repeat center center fixed;
             background-size: cover;
         }}
 
