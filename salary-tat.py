@@ -10,7 +10,7 @@ GITHUB_URL_IS = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/IS.x
 GITHUB_LOGO_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/LOGO-Talent-Access-Technologies-removebg.png"
 
 # 📌 URL du fond d'écran GIF
-BACKGROUND_GIF_URL = "https://makeagif.com/i/5j1gUS"
+BACKGROUND_GIF_URL = "https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/videoblocks_abstract_concept_modern_tech_white_waves_motion_background.mp4"
 
 # 📌 Charger les données Excel depuis GitHub
 @st.cache_data
@@ -28,7 +28,7 @@ st.markdown(
     <style>
         /* 🌌 Ajout d'un fond GIF animé */
         .stApp {{
-            background: url("https://makeagif.com/i/5j1gUS") no-repeat center center fixed;
+            background: url("https://raw.githubusercontent.com/Djoiusis/TAT-Salary/main/videoblocks_abstract_concept_modern_tech_white_waves_motion_background.mp4") no-repeat center center fixed;
             background-size: cover;
         }}
 
