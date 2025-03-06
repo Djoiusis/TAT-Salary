@@ -49,13 +49,11 @@ st.markdown(
             margin-bottom: 40px;
         }}
 
-        /* Style pour le bouton Postuler */
         .postuler {{
             text-align: center;
             margin-top: 20px;
         }}
 
-        /* Style de la popup */
         .modal {{
             position: fixed;
             z-index: 999;
@@ -135,26 +133,25 @@ if st.button("📄 Postuler"):
 
 # 🌟 **Popup pour renseigner le CV et le numéro de téléphone**
 if "popup_active" in st.session_state and st.session_state["popup_active"]:
-    with st.container():
-        st.markdown('<div class="modal">', unsafe_allow_html=True)
-        st.subheader("📩 Envoyer ma candidature")
+    st.markdown('<div class="modal">', unsafe_allow_html=True)
+    st.subheader("📩 Envoyer ma candidature")
 
-        # 📂 Upload du CV
-        cv = st.file_uploader("📂 Importer votre CV (PDF uniquement)", type=["pdf"])
-        
-        # 📞 Champ de numéro de téléphone
-        telephone = st.text_input("📞 Numéro de téléphone", placeholder="Ex : +41 79 123 45 67")
+    # 📂 Upload du CV dans la popup
+    cv = st.file_uploader("📂 Importer votre CV (PDF uniquement)", type=["pdf"])
+    
+    # 📞 Champ de numéro de téléphone
+    telephone = st.text_input("📞 Numéro de téléphone", placeholder="Ex : +41 79 123 45 67")
 
-        # ✅ Bouton d'envoi
-        if st.button("📩 Confirmer ma candidature"):
-            if cv is not None and telephone:
-                st.success("✅ Candidature envoyée avec succès ! Nous vous contacterons bientôt.")
-                st.session_state["popup_active"] = False  # Fermer la popup
-            else:
-                st.warning("⚠️ Veuillez remplir tous les champs.")
-
-        # Bouton de fermeture
-        if st.button("❌ Annuler"):
+    # ✅ Bouton d'envoi
+    if st.button("📩 Confirmer ma candidature"):
+        if cv is not None and telephone:
+            st.success("✅ Candidature envoyée avec succès ! Nous vous contacterons bientôt.")
             st.session_state["popup_active"] = False  # Fermer la popup
+        else:
+            st.warning("⚠️ Veuillez remplir tous les champs.")
 
-        st.markdown('</div>', unsafe_allow_html=True)
+    # ❌ Bouton de fermeture
+    if st.button("❌ Annuler"):
+        st.session_state["popup_active"] = False  # Fermer la popup
+
+    st.markdown('</div>', unsafe_allow_html=True)
