@@ -48,6 +48,20 @@ st.markdown(
             margin-top: 40px;
             margin-bottom: 40px;
         }}
+
+        /* Style pour la popup */
+        .modal {{
+            position: fixed;
+            z-index: 999;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 50%;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+        }}
     </style>
     """,
     unsafe_allow_html=True
@@ -92,32 +106,6 @@ with col1:
     nationalite = st.radio("🌍 Statut de résidence", ["🇨🇭 Suisse", "🏷️ Permis C", "🌍 Autre (Imposé à la source)"])
     soumis_is = nationalite == "🌍 Autre (Imposé à la source)"
 
-    # **Bouton de calcul**
-    if st.button("🧮 Calculer Salaire"):
-        salaire_brut_mensuel = salaire_brut_annuel / 12
-        taux_is = 0 if not soumis_is else (is_df[situation_familiale].loc[
-            (is_df["Année Min"] <= salaire_brut_annuel) & (is_df["Année Max"] >= salaire_brut_annuel)
-        ].values[0] / 100)
-
-        # **Calcul des cotisations**
-        taux_fixes = {
-            "AVS": 5.3 / 100,
-            "AC": 1.1 / 100,
-            "AANP": 0.63 / 100,
-            "Maternité": 0.032 / 100,
-            "APG": 0.495 / 100,
-        }
-        cotisations = {key: salaire_brut_mensuel * taux for key, taux in taux_fixes.items()}
-        cotisations["Impôt Source"] = salaire_brut_mensuel * taux_is
-
-        total_deductions = sum(cotisations.values())
-        salaire_net_mensuel = salaire_brut_mensuel - total_deductions
-
-        st.write(f"### 💰 Salaire Net Mensuel : {salaire_net_mensuel:.2f} CHF")
-        st.write("### 📉 Détail des Déductions :")
-        for key, value in cotisations.items():
-            st.write(f"- **{key}** : {value:.2f} CHF")
-
     st.markdown('</div>', unsafe_allow_html=True)
 
 # 🌟 **Espacement entre les blocs**
@@ -132,35 +120,27 @@ with col2:
     tjm_client = st.number_input("💰 TJM Client (CHF)", min_value=0, value=800)
     jours_travailles = st.number_input("📅 Jours travaillés par mois", min_value=1, max_value=30, value=20)
 
-    # **Charges employeur en portage**
-    charges_employeur = {
-        "AVS": 5.3 / 100,
-        "AC": 1.1 / 100,
-        "Alloc. Familiale": 2.25 / 100,
-        "Petite Enfance": 0.07 / 100,
-        "LFP": 0.082 / 100,
-        "Amat": 0.032 / 100,
-        "AAP": 0.0476 / 100,
-        "APG": 0.48 / 100,
-    }
-
-    # **Calcul du salaire net en portage**
-    if st.button("📈 Simuler Portage Salarial"):
-        revenus_mensuels = tjm_client * jours_travailles
-        cout_employeur_total = sum(revenus_mensuels * taux for taux in charges_employeur.values())
-
-        salaire_net_portage = revenus_mensuels - cout_employeur_total
-
-        st.write(f"### 📉 Salaire Net en Portage Salarial : {salaire_net_portage:.2f} CHF")
-        st.write("### 📋 Détail des Charges Employeur :")
-        for key, value in charges_employeur.items():
-            st.write(f"- **{key}** : {revenus_mensuels * value:.2f} CHF")
-
-    # **Boutons d'action**
-    if st.button("📄 Postuler avec une candidature par défaut"):
-        st.success("✅ Votre candidature a été envoyée avec succès !")
-
-    if st.button("💼 Vous avez un client ou une opportunité ? On s’occupe de tout !"):
-        st.success("✅ Nous allons vous contacter rapidement pour organiser votre mission !")
-
     st.markdown('</div>', unsafe_allow_html=True)
+
+# 🌟 **Popup pour postuler**
+st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
+with st.expander("📄 Postuler avec un CV"):
+    st.subheader("🔍 Informations du Candidat")
+    
+    # 📂 Upload de CV
+    cv = st.file_uploader("📂 Importer votre CV (PDF uniquement)", type=["pdf"])
+    
+    # 📞 Champ de numéro de téléphone
+    telephone = st.text_input("📞 Numéro de téléphone", placeholder="Ex : +41 79 123 45 67")
+    
+    # ✅ Bouton de validation
+    if st.button("📩 Envoyer la Candidature"):
+        if cv is not None and telephone:
+            st.success("✅ Candidature envoyée avec succès ! Nous vous contacterons bientôt.")
+        else:
+            st.warning("⚠️ Veuillez renseigner un numéro de téléphone et importer un CV.")
+
+# 🌟 **Bouton Opportunité**
+st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
+if st.button("💼 Vous avez un client ou une opportunité ? On s’occupe de tout !"):
+    st.success("✅ Nous allons vous contacter rapidement pour organiser votre mission !")
