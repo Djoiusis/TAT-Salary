@@ -133,7 +133,6 @@ if st.button("📄 Postuler"):
 
 # 🌟 **Popup pour renseigner le CV et le numéro de téléphone**
 if "popup_active" in st.session_state and st.session_state["popup_active"]:
-    st.markdown('<div class="modal">', unsafe_allow_html=True)
     st.subheader("📩 Envoyer ma candidature")
 
     # 📂 Upload du CV dans la popup
